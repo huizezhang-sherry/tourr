@@ -1,0 +1,321 @@
+---
+title: "Presentation Ninja"
+subtitle: "⚔<br/>with xaringan"
+author: "Yihui Xie"
+institute: "RStudio, Inc."
+date: "2016/12/12 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE)
+library(tidyverse)
+```
+
+```{r echo = FALSE}
+
+line_expr <- function(x, a, b, degree, randomness){
+  tan((degree + randomness)*pi /180) * (x-a) + b
+}
+
+
+y1 <- function(x,a,b,randomness){
+  line_expr(degree = 0,x,a,b, randomness)
+}
+
+y2 <- function(x,a,b,randomness){
+  line_expr(degree = 72,x,a,b, randomness)
+}
+
+y3 <- function(x,a,b,randomness){
+  line_expr(degree =72*2,x,a,b, randomness)
+}
+
+y4 <- function(x,a,b,randomness){
+  line_expr(degree = 72*3,x,a,b, randomness)
+}
+
+y5 <- function(x,a,b,randomness){
+  line_expr(degree = 72*4,x,a,b, randomness)
+}
+
+draw_cluster <- function(x_best = NULL, y_best = NULL, length, iter, randomness){
+  
+  #browser()
+  
+  if(length(x_best) == 0){
+    
+    best <- sample(1:nrow(dt),1)
+    
+    x_best <- dt[best, "x"]
+    y_best <- dt[best, "value"]
+    
+    a <- x_best
+    b <- y_best
+  }else{
+    
+  }
+
+  x1 <- seq(x_best, length.out = length)
+  x2 <- seq(x_best, length.out = length, by = -1)
+  
+  df1 <- data.frame(x = x1, a = x_best, b= y_best, randomness = randomness)
+  df2 <- data.frame(x = x2, a = x_best, b= y_best, randomness = randomness)
+  
+  f1 <- list(y1, y2, y5)
+  f2 <- list(y3, y4)
+  
+  map_to_line1 <- function(f) pmap(df1, f)
+  map_to_line2 <- function(f) pmap(df2, f)
+  
+  dt1 <- map(f1, map_to_line1) %>% 
+    unlist() %>% as.data.frame() %>% 
+    mutate(x = rep(x_best:(x_best + length-1), 3), 
+           y = rep(c(1,2,5),each = length))
+  colnames(dt1)[1] <- "value"  
+  
+  dt2 <- map(f2, map_to_line2) %>% 
+    unlist() %>% as.data.frame() %>% 
+    mutate(x = rep(x_best:(x_best- length +1), 2), 
+           y = rep(c(3, 4),each = length))
+  colnames(dt2)[1] <- "value"  
+  
+  dt <- bind_rows(dt1, dt2) %>% 
+    mutate(iter=  iter)
+    
+  
+  return(dt)
+}
+
+
+gen_line <- function(x_best, y_best, y, iter, randomness){
+  
+  dt <- pmap(data.frame(x = (x_best-10):(x_best+10),a = x_best,b = y_best, 
+                        randomness = randomness), y) %>% 
+    unlist() %>% as.data.frame() %>% 
+    mutate(x = rep((x_best-10):(x_best+ 10), 1), 
+           y = rep(4,each = length(x)), 
+           type = 1, 
+           iter = iter)
+  colnames(dt)[1] <- "value"  
+  
+  return(dt)
+}
+```
+
+
+
+---
+
+Randomly generate five directions 
+
+```{r echo = FALSE}
+dt_a <- draw_cluster(0, 0, length =3, iter = 1, randomness = 3) %>% 
+  mutate(frame = 1, type = 0)
+
+dt_a %>% filter(y %in% c(1,2,5)) %>% 
+  ggplot(aes(x = x, y = value, group = y, color = as.factor(y))) + 
+  geom_point() + 
+  geom_line(arrow = arrow(angle = 20, length = unit(0.15, "inches"))) + 
+  geom_point(data =  dt_a %>% filter(y %in% c(3,4)), 
+         aes(x = x, y = value, group = y, color = as.factor(y))) + 
+  geom_line(data =  dt_a %>% filter(y %in% c(3,4)), 
+         aes(x = x, y = value, group = y, color = as.factor(y)), 
+         arrow = arrow(end = "first", angle = 20, length = unit(0.15, "inches"))) + 
+  xlim(-10, 10) + 
+  ylim(-10, 10) + 
+  theme(legend.position = "none")
+```
+
+
+---
+Extend the optimal direction
+
+```{r echo = FALSE}
+
+x_best <- -2
+y_best <- dt_a$value[which(dt_a$x == -2 & dt_a$y ==4)][1]
+
+dt2 <- gen_line(x_best, y_best, y4, iter = 2, randomness= 3)
+
+data2 <- bind_rows(dt_a, dt2) %>% 
+  mutate(frame = 2) %>% 
+  bind_rows(dt_a)
+
+dt_a %>% 
+  ggplot(aes(x = x, y = value, group = interaction(y, frame, iter))) +
+  geom_line(col = "gray") + 
+  geom_point(col = "gray") +
+  xlim(-10, 10) + 
+  ylim(-10, 10) + 
+  geom_line(data = dt2, aes(x = x, y = value, group = y, col = as.factor(y))) + 
+  geom_point(data = dt2, aes(x = x, y = value, group = y, col = as.factor(y))) + 
+  theme(legend.position = "none")
+  
+```
+
+---
+
+Find the optimal basis along the best direction 
+
+```{r echo = FALSE}
+
+x_best <- -2
+y_best <- dt_a$value[which(dt_a$x == -2 & dt_a$y ==4)][1]
+
+dt2 <- gen_line(x_best, y_best, y4, iter = 2, randomness= 3)
+
+data2 <- bind_rows(dt_a, dt2) %>% 
+  mutate(frame = 2) %>% 
+  bind_rows(dt_a)
+
+dt_a %>% 
+  ggplot(aes(x = x, y = value, group = interaction(y, frame, iter))) +
+  geom_line(col = "gray") + 
+  geom_point(col = "gray") +
+  xlim(-10, 10) + 
+  ylim(-10, 10) + 
+  geom_point(aes(x = x_best, y = y_best, col = as.factor(y))) + 
+  geom_line(data = dt2, aes(x = x, y = value, group = y), col = "gray") + 
+  theme(legend.position = "none")
+
+```
+
+
+---
+
+Randomly generate another five directions at the new optimal
+
+```{r echo = FALSE}
+
+dt_b <- draw_cluster(x_best = x_best,y_best = y_best,length= 3, iter = 3, randomness = 32) %>% 
+  mutate(type = 0)
+
+data3 <- bind_rows(data2, dt_b) %>% 
+  mutate(frame = 3) %>% 
+  bind_rows(data2)
+
+data2 %>% 
+  ggplot(aes(x = x, y = value, group = interaction(y, frame, iter))) +
+  geom_line(col = "gray") + 
+  geom_point(col = "gray") +
+  xlim(-10, 10) + 
+  ylim(-10, 10) + 
+  geom_line(data = dt_b %>% filter(y %in% c(1,2,5)), 
+            aes(x = x, y = value, group = interaction(y, iter), col = as.factor(y)), 
+            arrow = arrow(angle = 20, length = unit(0.1, "inches"))) +
+  geom_point(data = dt_b %>% filter(y %in% c(1,2,5)), 
+            aes(x = x, y = value, group = interaction(y, iter), col = as.factor(y))) +
+  geom_line(data = dt_b %>% filter(y %in% c(3,4)), 
+             aes(x = x, y = value, group = interaction(y, iter), col = as.factor(y)),
+            arrow = arrow(end = "first", angle = 20, length = unit(0.15, "inches"))) + 
+  geom_point(data = dt_b %>% filter(y %in% c(3,4)), 
+             aes(x = x, y = value, group = interaction(y, iter), col = as.factor(y))) + 
+  theme(legend.position = "none")
+
+
+```
+
+
+
+---
+
+Extend the optimal direction
+
+
+```{r echo = FALSE}
+x_best <- -4
+y_best <- dt_b$value[which(dt_b$x == -4 & dt_b$y ==3 & dt_b$iter == 3)]
+
+dt4 <- gen_line(x_best, y_best, y3, iter = 4, randomness= 32)
+
+data4 <- bind_rows(data3, dt4) %>% 
+  mutate(frame = 4) %>% 
+  bind_rows(data3)
+
+data3 %>% 
+  ggplot(aes(x = x, y = value, group = interaction(y, frame, iter))) +
+  geom_line(col = "gray") + 
+  geom_point(col = "gray") +
+  xlim(-10, 10) + 
+  ylim(-10, 10) + 
+  geom_line(data = dt4, aes(x = x, y = value, 
+                          group = interaction(y, iter), col = as.factor(y))) + 
+  geom_point(data = dt4, aes(x = x, y = value, 
+                          group = interaction(y, iter), col = as.factor(y))) + 
+  theme(legend.position = "none")
+
+
+```
+
+
+---
+Find the optimal basis along the best direction 
+
+```{r echo = FALSE}
+x_best <- -4
+y_best <- dt_b$value[which(dt_b$x == -4 & dt_b$y ==3 & dt_b$iter == 3)]
+
+dt4 <- gen_line(x_best, y_best, y3, iter = 4, randomness= 32)
+
+data4 <- bind_rows(data3, dt4) %>% 
+  mutate(frame = 4) %>% 
+  bind_rows(data3)
+
+data3 %>% 
+  ggplot(aes(x = x, y = value, group = interaction(y, frame, iter))) +
+  geom_line(col = "gray") + 
+  geom_point(col = "gray") +
+  xlim(-10, 10) + 
+  ylim(-10, 10) + 
+  geom_line(data = dt4, aes(x = x, y = value, 
+                          group = interaction(y, iter)), col = "gray" ) + 
+  geom_point(data = dt4, aes(x = x, y = value, 
+                          group = interaction(y, iter)), col = "gray") + 
+  geom_point(aes(x = x_best, y = y_best, col = as.factor(y))) +
+  theme(legend.position = "none")
+
+
+```
+
+---
+
+Randomly generate another five directions at the new optimal
+
+```{r echo = FALSE}
+
+dt_c <- draw_cluster(x_best = x_best,y_best = y_best,length= 3, iter = 5, 
+                     randomness = 40) %>% 
+  mutate(type = 0)
+
+data5 <- bind_rows(data4, dt_c) %>% 
+  mutate(frame = 5) %>% 
+  bind_rows(data4)
+
+data4 %>% 
+  ggplot(aes(x = x, y = value, group = interaction(y, frame, iter))) +
+  geom_line(col = "gray") + 
+  geom_point(col = "gray") +
+  xlim(-10, 10) + 
+  ylim(-10, 10) + 
+  geom_line(data = dt_c %>% filter(y %in% c(1,2,5)), 
+            aes(x = x, y = value, group = interaction(y, iter), col = as.factor(y)), 
+            arrow  = arrow(angle = 20, length = unit(0.15, "inches"))) +
+  geom_point(data = dt_c %>% filter(y %in% c(1,2,5)), 
+            aes(x = x, y = value, group = interaction(y, iter), col = as.factor(y))) +
+  geom_line(data = dt_c %>% filter(y %in% c(3,4)), 
+             aes(x = x, y = value, group = interaction(y, iter), col = as.factor(y)),
+            arrow = arrow(end = "first", angle = 20, length = unit(0.15, "inches"))) + 
+  geom_point(data = dt_c %>% filter(y %in% c(3,4)), 
+             aes(x = x, y = value, group = interaction(y, iter), col = as.factor(y))) + 
+  theme(legend.position = "none")
+
+```
+
