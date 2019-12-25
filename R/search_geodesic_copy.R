@@ -35,6 +35,8 @@ search_geodesic <- function(current, alpha = 1, index, max.tries = 5, n = 5, ste
     direction[[try]] <- direction[[which.max(record[try-5: try-1])]]
     peak[[try]] <-  peak[[which.max(record[try - 5: try-1])]]
 
+    cat("peak: ", peak[[try]])
+
 
 
 
@@ -116,7 +118,6 @@ find_path_peak <- function(old, new, index, max_dist = pi / 4) {
   interpolator <- geodesic_info(old, new)
 
   index_pos <- function(alpha) index(step_angle(interpolator, alpha))
-
   alpha <- stats::optimize(index_pos, c(-max_dist, max_dist), maximum = TRUE, tol = 0.01)
 
   list(
