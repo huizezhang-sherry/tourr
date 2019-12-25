@@ -1,0 +1,15 @@
+Search_geodesic() function updates the tour in the following routine.
+  - Five candidate bases are randomly generated and the basis with the largest index value is choosen as the new direction to interpolate
+  - The objective function to optimise is the interpolate path from the current basis to the new basis
+  - The object to optimise is the angle departs from the current basis, along the interpolation path
+  - Optimise is performed over a window of 90 degree from the current basis
+  - The function outputs a list that contains the information of the best angle, the resulting projection basis and the index value
+
+Serach_better():
+  - Randomly generate one basis near the current basis
+  - Compute the index value using the newly generated basis
+  - If the new index value is larger that the current index value, accept the new basis
+  - The above process is repeated for max.tries number of times and outputs the new basis
+
+search_better_random() performs similar procedure as search_better(). When the new index value is less then the current index value and the difference is smaller than a prescribed epsilon, search_better_random() will generate a random new basis and output the new basis. This stochastic component allows the optimisation to jump out of the local maximum.
+
