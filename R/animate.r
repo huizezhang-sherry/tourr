@@ -95,6 +95,8 @@ animate <- function(data, tour_path = grand_tour(), display = display_xy(), star
       dev.flush()
       if (step$step < 0) break #break after rendering final projection
       Sys.sleep(1 / fps)
+      optim_obj <- record
+      optim_obj
     }
   }, interrupt = function(cond) {
     dev.flush()
@@ -104,6 +106,8 @@ animate <- function(data, tour_path = grand_tour(), display = display_xy(), star
   if (b != 0){
     invisible(bases[, , seq_len(b)])
   }
+
+  print(optim_obj)
 }
 
 rstudio_gd <- function() identical(names(dev.cur()), "RStudioGD")

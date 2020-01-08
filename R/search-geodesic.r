@@ -41,7 +41,7 @@ search_geodesic <- function(current, alpha = 1, index, max.tries = 5, n = 5, ste
         "(", dig3(peak$dist), " away)", sep="")
     if (pdiff > 0.001) {
       cat(" - NEW BASIS\n")
-      return(peak$basis)
+      return(peak)
     }
     cat("\n")
 

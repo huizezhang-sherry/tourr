@@ -39,16 +39,38 @@
 #' # ways
 #' f <- flea[, 1:3]
 #' tries <- replicate(5, save_history(f, guided_tour(holes())), simplify = FALSE)
-guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries = 25, max.i = Inf, search_f = search_geodesic, ...) {
+
+guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries = 20, max.i = Inf, search_f = search_geodesic, ...) {
+
+  # init
+  record <<- list(
+    counter = c(),
+    basis = list(NULL),
+    index_val = c()
+  )
+
+  counter <<- 1
 
   generator <- function(current, data) {
-    if (is.null(current)) return(basis_init(ncol(data), d))
 
     index <- function(proj) {
       index_f(as.matrix(data) %*% proj)
     }
 
-    cur_index <- index(current)
+
+    if (is.null(current)) {
+
+      record$counter[1] <<- 1L
+      record$basis[[1]] <<- basis_init(ncol(data), d)
+      record$index_val[1] <<- index(record$basis[[1]])
+      current <<- record$basis[[counter]]
+      cur_index <<- record$index_val[counter]
+
+      return(record$basis[[1]])
+    }
+
+    counter <<- counter + 1
+    record$counter[counter] <<- counter
 
     if (cur_index > max.i){
       cat("Found index ", cur_index, ", larger than selected maximum ", max.i, ". Stopping search.\n",
@@ -69,10 +91,14 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
       return(NULL)
     }
 
-    basis <- search_f(current, alpha, index, max.tries, cur_index=cur_index, ...)
+    basis <<- search_f(current, alpha, index, max.tries, cur_index=cur_index, ...)
     alpha <<- alpha * cooling
 
-    basis
+    record$basis[[counter]] <<- basis$basis
+    record$index_val[counter] <<- basis$index
+
+    basis$basis
+
   }
 
   new_geodesic_path("guided", generator)

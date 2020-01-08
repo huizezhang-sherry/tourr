@@ -19,9 +19,11 @@
 #'   \code{\link{freeze}}
 #' @export
 #' @keywords internal
-new_geodesic_path <- function(name, generator, frozen = NULL) {
+new_geodesic_path <- function(name, generator, frozen = NULL, ...) {
 
   tour_path <- function(current, data) {
+    current <- record$basis[[counter]]
+
     if (is.null(current)) {
       return(generator(NULL, data))
     }
@@ -29,7 +31,7 @@ new_geodesic_path <- function(name, generator, frozen = NULL) {
     # Keep trying until we get a frame that's not too close to the
     # current frame
     dist <- 0; tries <- 0
-    while (dist < 1e-3) {
+    while (dist < 1e-2) {
       target <- generator(current, data)
 
       # generator has run out, so give up
@@ -41,7 +43,12 @@ new_geodesic_path <- function(name, generator, frozen = NULL) {
 
       dist <- proj_dist(current, target)
     }
-    geodesic_path(current, target, frozen)
+
+    #geodesic_path(current, target, frozen)
+    geo <- geodesic_path(current, target, frozen)
+    record
+    list(geo = geo, record = record)
+
   }
 
   structure(
@@ -49,8 +56,8 @@ new_geodesic_path <- function(name, generator, frozen = NULL) {
     name = name,
     class = c("tour_path", "function")
   )
-}
 
+}
 
 #' @export
 "print.tour_path" <- function(x, ...) {
