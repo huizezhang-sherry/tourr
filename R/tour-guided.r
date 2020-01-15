@@ -42,6 +42,7 @@
 
 guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries = 20, max.i = Inf, search_f = search_geodesic, ...) {
 
+  #browser()
   # init
   record <<- list(
     counter = c(),
@@ -94,12 +95,10 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
     basis <<- search_f(current, alpha, index, max.tries, cur_index=cur_index, ...)
     alpha <<- alpha * cooling
 
-    record$basis[[counter]] <<- basis$basis
-    record$index_val[counter] <<- basis$index
-
-    basis$basis
+    as.matrix(basis$basis[[length(basis$basis)]])
 
   }
 
   new_geodesic_path("guided", generator)
 }
+

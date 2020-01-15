@@ -20,6 +20,7 @@
 #'  of steps taken towards the target.
 #' @export
 new_tour <- function(data, tour_path, start = NULL) {
+  #browser()
   stopifnot(inherits(tour_path, "tour_path"))
 
   if (is.null(start)) {
@@ -36,6 +37,8 @@ new_tour <- function(data, tour_path, start = NULL) {
   geodesic <- NULL
 
   function(step_size) {
+    #browser()
+
     step <<- step + 1
     cur_dist <<- cur_dist + step_size
 
@@ -48,9 +51,12 @@ new_tour <- function(data, tour_path, start = NULL) {
     }
 
     if (cur_dist >= target_dist) {
-      geodesic <<- tour_path(proj, data)
+      tour_path_obj <<- tour_path(proj, data)
+      geodesic <<- tour_path_obj[["geo"]]
+      record <<- tour_path_obj[["record"]]
+      #cat("print record_val", record$index_val, "\n")
       if (is.null(geodesic)) {
-        return(list(proj = proj, target = target, step = -1)) #use negative step size to signal that we have reached the final target
+        return(list(proj = proj, target = target, step = -1, record = record)) #use negative step size to signal that we have reached the final target
       }
 
       target_dist <<- geodesic$dist
@@ -66,9 +72,12 @@ new_tour <- function(data, tour_path, start = NULL) {
     }
 
     proj <<- geodesic$interpolate(cur_dist / target_dist)
-    list(proj = proj, target = target, step = step)
+    record <<- record
+    list(proj = proj, target = target, step = step, record = record)
   }
+
 }
+
 
 #' @importFrom grDevices dev.cur dev.flush dev.hold dev.off hcl rgb
 #' @importFrom graphics abline axis box hist image lines pairs par plot points

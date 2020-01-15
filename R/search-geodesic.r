@@ -19,18 +19,27 @@
 #' @param cur_index index value for starting projection, set NA if it needs to
 #'   be calculated
 #' @keywords optimize
-search_geodesic <- function(current, alpha = 1, index, max.tries = 5, n = 5, stepS = 0.01, cur_index = NA) {
+search_geodesic <- function(current, alpha = 1, index, max.tries = 25, n = 5, stepS = 0.01, cur_index = NA) {
+  #browser()
   if (is.na(cur_index)) cur_index <- index(current)
 
-  try <- 1
-  while(try < max.tries) {
+  counter <<- 2
+  record$counter[counter] <<- counter
+
+
+  while(counter < max.tries) {
     # Try 5 random directions and pick the one that has the highest
     # index after a small step in either direction
     direction <- find_best_dir(current, index, tries = n, dist=stepS)
 
     # Travel halfway round (pi / 4 radians) the sphere in that direction
     # looking for the best projection
-    peak <- find_path_peak(current, direction, index)
+    peak <<- find_path_peak(current, direction, index)
+
+    record$basis[[counter]] <<- peak$basis
+    record$index_val[counter] <<- peak$index_val
+
+    counter <<- counter + 1
 
     pdiff <- (peak$index - cur_index) / cur_index
 
@@ -41,29 +50,13 @@ search_geodesic <- function(current, alpha = 1, index, max.tries = 5, n = 5, ste
         "(", dig3(peak$dist), " away)", sep="")
     if (pdiff > 0.001) {
       cat(" - NEW BASIS\n")
-      return(peak)
     }
     cat("\n")
 
-    try <- try + 1
   }
-  cat("No better bases found after ", max.tries, " tries.  Giving up.\n",
-   sep="")
-  cat("Final projection: \n")
-  if (ncol(current)==1) {
-    for (i in 1:length(current))
-      cat(sprintf("%.3f",current[i])," ")
-    cat("\n")
-  }
-  else {
-    for (i in 1:nrow(current)) {
-      for (j in 1:ncol(current))
-        cat(sprintf("%.3f",current[i,j])," ")
-      cat("\n")
-    }
-  }
+  current <<- record$basis
 
-  NULL
+  record
 }
 
 #' Find the most promising direction to travel in.
@@ -113,7 +106,7 @@ find_path_peak <- function(old, new, index, max_dist = pi / 4) {
 
   list(
     basis = step_angle(interpolator, alpha$maximum),
-    index = alpha$objective,
-    dist = abs(alpha$maximum)
+    index_val = alpha$objective, # index_val
+    angle = abs(alpha$maximum) # angle
   )
 }
