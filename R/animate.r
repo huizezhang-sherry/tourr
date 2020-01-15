@@ -35,7 +35,8 @@
 #' animate(f, max_frames = 30)
 #'
 #' \dontrun{animate(f, max_frames = 10, fps = 1, aps = 0.1)}
-animate <- function(data, tour_path = grand_tour(), display = display_xy(), start = NULL, aps = 1, fps = 30, max_frames = Inf, rescale = TRUE, sphere = FALSE, ...) {
+animate <- function(data, tour_path = grand_tour(), display = display_xy(), start = NULL, aps = 1, fps = 30, max_frames = 25, rescale = TRUE, sphere = FALSE, ...) {
+  #browser()
   if (!is.matrix(data)) {
     message("Converting input data to the required matrix format.")
     data <- as.matrix(data)
@@ -65,7 +66,9 @@ animate <- function(data, tour_path = grand_tour(), display = display_xy(), star
   # Initialise display
   display$init(data)
   display$render_frame()
+  #display$render_data(data, start$proj, index_val = start$record$index_val[-1])
   display$render_data(data, start$proj)
+
 
   b <- 0
   i <- 0
@@ -84,6 +87,7 @@ animate <- function(data, tour_path = grand_tour(), display = display_xy(), star
         bases[, , b] <- step$target
       }
 
+
       dev.hold()
       on.exit(dev.flush())
       if (plat$os == "win" || plat$iface == "rstudio") {
@@ -91,10 +95,14 @@ animate <- function(data, tour_path = grand_tour(), display = display_xy(), star
       } else {
         display$render_transition()
       }
+      #display$render_data(data, step$proj, step$target, index_val = record$index_val[-1])
       display$render_data(data, step$proj, step$target)
+
       dev.flush()
+
       if (step$step < 0) break #break after rendering final projection
       Sys.sleep(1 / fps)
+
       optim_obj <- record
       optim_obj
     }
@@ -107,7 +115,7 @@ animate <- function(data, tour_path = grand_tour(), display = display_xy(), star
     invisible(bases[, , seq_len(b)])
   }
 
-  print(optim_obj)
+  return(optim_obj)
 }
 
 rstudio_gd <- function() identical(names(dev.cur()), "RStudioGD")

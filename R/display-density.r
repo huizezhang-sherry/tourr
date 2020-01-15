@@ -22,7 +22,7 @@
 #'
 #' # Alternatively, you can display the distribution with a histogram
 #' animate_dist(flea[, 1:6], method = "hist")
-display_dist <- function(method="density", center = TRUE, half_range = NULL, rug = FALSE, ...) {
+display_dist <- function(method="density", center = TRUE, half_range = NULL, rug = FALSE,...) {
   if (!requireNamespace("ash", quietly = TRUE)) {
     stop("Please install the ash package", call. = FALSE)
   }
@@ -42,15 +42,17 @@ display_dist <- function(method="density", center = TRUE, half_range = NULL, rug
       xlab = "Data Projection", ylab = "Density", yaxt = "n"
     )
     axis(2, seq(0, 4, by = 1))
+
   }
   render_transition <- function() {
-    rect(-1, -1.1, 1.2, 4, col="#FFFFFFE6", border=NA)
+    rect(-1, -1.1, 1.2, 3, col="#FFFFFFE6", border=NA)
   }
-  render_data <- function(data, proj, geodesic) {
+  render_data <- function(data, proj, geodesic, index_val) {
     abline(h = seq(0.5, 3.5, by=0.5), col="grey80")
-    lines(c(0,0), c(-1,0), col="grey80")
+    lines(c(0,0), c(-1.1,0), col="grey80")
     lines(c(-1,-1), c(-1.1,0), col="grey80")
     lines(c(1,1), c(-1.1,0), col="grey80")
+    segments(-1, -1.1, 1.2, -1.1, col = "grey80")
 
     x <- data %*% proj
     if (center) x <- center(x)
@@ -78,6 +80,9 @@ display_dist <- function(method="density", center = TRUE, half_range = NULL, rug
     ax <- seq_along(proj) / length(proj)
     segments(0, -ax, proj, -ax, col="black", lwd=3)
     text(1.0, -ax, labels, pos = 4)
+
+    # display index
+    #text(0.7, 2.8, labels = index_val)
   }
 
   list(
@@ -94,6 +99,7 @@ display_dist <- function(method="density", center = TRUE, half_range = NULL, rug
 #' @inheritParams animate
 #' @export
 animate_dist <- function(data, tour_path = grand_tour(1), ...) {
+  #browser()
   animate(
     data = data, tour_path = tour_path,
     display = display_dist(...),
