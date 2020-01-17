@@ -40,7 +40,7 @@
 #' f <- flea[, 1:3]
 #' tries <- replicate(5, save_history(f, guided_tour(holes())), simplify = FALSE)
 
-guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries = 20, max.i = Inf, search_f = search_geodesic, ...) {
+guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries = 25, max.i = Inf, search_f = search_geodesic, ...) {
 
   #browser()
   # init
@@ -53,6 +53,7 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
   counter <<- 1
 
   generator <- function(current, data) {
+    #browser()
 
     index <- function(proj) {
       index_f(as.matrix(data) %*% proj)
@@ -64,14 +65,12 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
       record$counter[1] <<- 1L
       record$basis[[1]] <<- basis_init(ncol(data), d)
       record$index_val[1] <<- index(record$basis[[1]])
+
       current <<- record$basis[[counter]]
       cur_index <<- record$index_val[counter]
 
       return(record$basis[[1]])
     }
-
-    counter <<- counter + 1
-    record$counter[counter] <<- counter
 
     if (cur_index > max.i){
       cat("Found index ", cur_index, ", larger than selected maximum ", max.i, ". Stopping search.\n",

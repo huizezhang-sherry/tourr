@@ -24,10 +24,9 @@ search_geodesic <- function(current, alpha = 1, index, max.tries = 25, n = 5, st
   if (is.na(cur_index)) cur_index <- index(current)
 
   counter <<- 2
-  record$counter[counter] <<- counter
-
 
   while(counter < max.tries) {
+    record$counter[counter] <<- counter
     # Try 5 random directions and pick the one that has the highest
     # index after a small step in either direction
     direction <- find_best_dir(current, index, tries = n, dist=stepS)
@@ -38,8 +37,6 @@ search_geodesic <- function(current, alpha = 1, index, max.tries = 25, n = 5, st
 
     record$basis[[counter]] <<- peak$basis
     record$index_val[counter] <<- peak$index_val
-
-    counter <<- counter + 1
 
     pdiff <- (peak$index - cur_index) / cur_index
 
@@ -53,7 +50,10 @@ search_geodesic <- function(current, alpha = 1, index, max.tries = 25, n = 5, st
     }
     cat("\n")
 
+    counter <<- counter + 1
   }
+
+  counter <<- counter -1
   current <<- record$basis
 
   record

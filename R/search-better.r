@@ -21,9 +21,9 @@ search_better <- function(current, alpha = 0.5, index, max.tries = 125,
     }
 
   counter <<- 2
-  record$counter[counter] <<- counter
 
   while(counter < max.tries) {
+
     new_basis <- basis_nearby(current, alpha, method)
 
     new_index <- index(new_basis)
@@ -31,16 +31,17 @@ search_better <- function(current, alpha = 0.5, index, max.tries = 125,
     cat("index value: ", new_index, "\n")
 
     if (new_index > cur_index) {
+      record$counter[counter] <<- counter
       record$basis[[counter]] <<- new_basis
       record$index_val[counter] <<- new_index
+      counter <<- counter + 1
     }else{
-      record$basis[[counter]] <<- current
-      record$index_val[counter] <<- cur_index
     }
-    counter <<- counter + 1
+
+
 
   }
-
+  counter <<- counter - 1
   current <<- record$basis
 
   record
@@ -56,26 +57,29 @@ search_better_random <- function(current, alpha = 0.5, index,
   if (is.na(cur_index)) cur_index <- index(current)
 
   counter <<- 1
-  record$counter[counter] <<- counter
 
   while(counter < max.tries) {
+    record$counter[counter] <<- counter
     new_basis <- basis_nearby(current, alpha, method)
     new_index <- index(new_basis)
+
     if (new_index > cur_index) {
       cat("New index", new_index, "\n")
-      counter <<- counter + 1
       record$basis[[counter]] <<- new_basis
       record$index_val[counter] <<- new_index
+      counter <<- counter + 1
     }
     else if (abs(new_index-cur_index) < eps) {
       new_basis <- basis_random(nrow(current), ncol(current))
-      counter <<- counter + 1
+
       record$basis[[counter]] <<- current
       record$index_val[counter] <<- cur_index
+      counter <<- counter + 1
     }
 
   }
 
+  counter <<- counter - 1
   current <<- record$basis
 
   record
