@@ -41,16 +41,8 @@
 #' tries <- replicate(5, save_history(f, guided_tour(holes())), simplify = FALSE)
 
 guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries = 25, max.i = Inf, search_f = search_geodesic, ...) {
-
   #browser()
   # init
-  record <<- list(
-    counter = c(),
-    basis = list(NULL),
-    index_val = c()
-  )
-
-  counter <<- 1
 
   generator <- function(current, data) {
     #browser()
@@ -62,14 +54,20 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
 
     if (is.null(current)) {
 
-      record$counter[1] <<- 1L
-      record$basis[[1]] <<- basis_init(ncol(data), d)
-      record$index_val[1] <<- index(record$basis[[1]])
+      current <- basis_init(ncol(data), d)
+      cur_index <<- index(current)
 
-      current <<- record$basis[[counter]]
-      cur_index <<- record$index_val[counter]
+      record <<- tibble(counter = 1,
+                       basis = list(basis_init(ncol(data), d))) %>%
+        mutate(index_val = map_dbl(basis, index))
 
-      return(record$basis[[1]])
+      # record$counter[1] <<- 1L
+      # record$basis[[1]] <<- basis_init(ncol(data), d)
+      # record$index_val[1] <<- index(record$basis[[1]])
+
+
+
+      return(current)
     }
 
     if (cur_index > max.i){
@@ -91,13 +89,16 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
       return(NULL)
     }
 
+    tries <<- tries
     basis <<- search_f(current, alpha, index, max.tries, cur_index=cur_index, ...)
     alpha <<- alpha * cooling
+    record <<- record
 
-    as.matrix(basis$basis[[length(basis$basis)]])
+    basis$current
 
   }
 
   new_geodesic_path("guided", generator)
 }
+
 

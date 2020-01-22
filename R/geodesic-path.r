@@ -24,7 +24,7 @@ new_geodesic_path <- function(name, generator, frozen = NULL, ...) {
   #browser()
   tour_path <- function(current, data) {
     #browser()
-    current <- record$basis[[counter]]
+    #current <- tail(record$basis, 1)
 
     if (is.null(current)) {
       return(generator(NULL, data))
@@ -33,7 +33,8 @@ new_geodesic_path <- function(name, generator, frozen = NULL, ...) {
     # Keep trying until we get a frame that's not too close to the
     # current frame
     dist <- 0; tries <- 0
-    while (dist < 1e-3) {
+    while (tries < 6) {
+      tries <<- tries
       target <- generator(current, data)
 
       # generator has run out, so give up

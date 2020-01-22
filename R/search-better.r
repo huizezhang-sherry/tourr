@@ -22,67 +22,94 @@ search_better <- function(current, alpha = 0.5, index, max.tries = 125,
 
   counter <<- 2
 
-  while(counter < max.tries) {
+  while(counter < 125) {
 
     new_basis <- basis_nearby(current, alpha, method)
 
     new_index <- index(new_basis)
 
-    cat("index value: ", new_index, "\n")
-
     if (new_index > cur_index) {
-      record$counter[counter] <<- counter
-      record$basis[[counter]] <<- new_basis
-      record$index_val[counter] <<- new_index
+      cur_index <- new_index
+      record_temp <<- tibble(basis = list(new_basis),
+             index_val = new_index,
+             counter = counter,
+             info = "new_basis") %>%
+        mutate(tries = tries)
+      record <<- record %>% bind_rows(record_temp)
       counter <<- counter + 1
     }else{
+      record_temp <<- tibble(basis = list(current),
+                             index_val = cur_index,
+                             counter = counter,
+                             info = "current") %>%
+        mutate(tries = tries)
+      record <<- record %>% bind_rows(record_temp)
+      counter <<- counter + 1
     }
 
 
+    test <- record %>% filter(info == "new_basis")
+
+    if(nrow(test) == 0){
+      current <- record %>%  tail(1) %>%
+        pull(basis) %>% unlist() %>% matrix(ncol = 2)
+    }else{
+      current <- record %>% filter(info == "new_basis") %>%
+        tail(1) %>% pull(basis)[[1]]
+    }
 
   }
-  counter <<- counter - 1
-  current <<- record$basis
 
-  record
-
+  list(record = record,
+       current = current)
 }
 
 #' Search for better projection, with stochastic component.
 #' @keywords internal
 search_better_random <- function(current, alpha = 0.5, index,
-  max.tries = 25, method = "linear", eps = 0.001, cur_index = NA
+  max.tries = 125, method = "linear", eps = 0.001, cur_index = NA
 ) {
   #browser()
   if (is.na(cur_index)) cur_index <- index(current)
 
   counter <<- 1
 
+  max.tries <-  125
   while(counter < max.tries) {
     record$counter[counter] <<- counter
     new_basis <- basis_nearby(current, alpha, method)
     new_index <- index(new_basis)
 
     if (new_index > cur_index) {
-      cat("New index", new_index, "\n")
-      record$basis[[counter]] <<- new_basis
-      record$index_val[counter] <<- new_index
+      record_temp <<- tibble(basis = list(new_basis),
+                             index_val = new_index,
+                             counter = counter,
+                             info = "new_basis") %>%
+        mutate(tries = tries)
+
+      record <<- record %>% bind_rows(record_temp)
+
       counter <<- counter + 1
+
     }
     else if (abs(new_index-cur_index) < eps) {
       new_basis <- basis_random(nrow(current), ncol(current))
 
-      record$basis[[counter]] <<- current
-      record$index_val[counter] <<- cur_index
+      record_temp <<- tibble(basis = list(current),
+                             index_val = cur_index,
+                             counter = counter,
+                             info = "random") %>%
+        mutate(tries = tries)
+
+      record <<- record %>% bind_rows(record_temp)
       counter <<- counter + 1
     }
+    current <- tail(record$basis, 1)[[1]]
 
   }
 
-  counter <<- counter - 1
-  current <<- record$basis
-
-  record
+  list(record = record,
+       current = current)
 }
 
 
