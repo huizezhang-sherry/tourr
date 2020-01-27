@@ -30,45 +30,79 @@ var <- list(x2 = x2,
 
 names <- list("x2", "x3", "x4", "x5", "x6", "x7")
 
+
 result_geodesic <- purrr::map2_df(var, names, function(var, names){
   data <- cbind(x1, x8, x9, x10, var)
 
   result <- animate_dist(data, tour_path =
-                           guided_tour(holes(),search_f = search_geodesic),
+                           guided_tour(holes(), d = 1,
+                                       search_f = search_geodesic),
                          sphere = TRUE) %>%
     mutate(col = names)
   result
 }) %>%
   mutate(method = "geodesic")
 
+result_geodesic  %>%
+  filter(info == "interpolation")  %>%
+  group_by(col) %>%
+  mutate(id = row_number()) %>%
+  ggplot(aes(x = id, y = index_val), size = 0.1) +
+  geom_line() +
+  facet_wrap(vars(col))
+
+#save(result_geodesic, file = "result_geodesic.rda")
+
 
 result_better <- purrr::map2_df(var, names, function(var, names){
   data <- cbind(x1, x8, x9, x10, var)
   result <- animate_dist(data, tour_path =
-                           guided_tour(holes(),search_f = search_better),
+                           guided_tour(holes(), d= 1,search_f = search_better),
                          sphere = TRUE) %>%
     mutate(col = names)
   result
 })%>%
   mutate(method = "better")
 
+result_better  %>% filter(col == "x3") %>% View()
+  filter(info == "interpolation")  %>% View()
+  group_by(col) %>%
+  mutate(id = row_number()) %>%
+  ggplot(aes(x = id, y = index_val), size = 0.1) +
+  geom_line() +
+  facet_wrap(vars(col))
+
+
+
+
 result_better_random <- purrr::map2_df(var, names, function(var, names){
   data <- cbind(x1, x8, x9, x10, var)
   result <- animate_dist(data, tour_path =
-                           guided_tour(holes(),search_f = search_better_random),
+                           guided_tour(holes(), d = 1, search_f = search_better_random),
                          sphere = TRUE) %>%
     mutate(col = names)
   result
 }) %>%
   mutate(method = "better_random")
 
-data <- bind_rows(result_geodesic, result_better, result_better_random)
-
-result_geodesic %>% filter(info == "linear_search_best") %>%
-  bind_rows(result_better_random, result_better) %>%
-  filter(tries == 5) %>%
-  ggplot(aes(x = counter, y = index_val, col = method), size = 0.1) +
+result_better_random %>%
+filter(info == "interpolation")  %>%
+  group_by(col) %>%
+  mutate(id = row_number()) %>%
+  ggplot(aes(x = id, y = index_val), size = 0.1) +
   geom_line() +
+  facet_wrap(vars(col))
+
+data <- bind_rows(result_geodesic, result_better, result_better_random)
+#save(data, file = "optim_data.rda")
+
+
+data  %>%
+  filter(info == "interpolation")  %>%
+  group_by(col, method) %>%
+  mutate(id = row_number()) %>%
+  ggplot(aes(x = id, y = index_val, col = method), size = 0.1, alpha = 0.5) +
+  geom_line() + geom_point()+
   facet_wrap(vars(col))
 
 ggsave("optim_comparison2.png")

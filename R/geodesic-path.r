@@ -33,7 +33,8 @@ new_geodesic_path <- function(name, generator, frozen = NULL, ...) {
     # Keep trying until we get a frame that's not too close to the
     # current frame
     dist <- 0; tries <- 0
-    while (tries < 6) {
+    while (dist < 1e-3) {
+      #browser()
       tries <<- tries
       target <- generator(current, data)
 
@@ -45,6 +46,7 @@ new_geodesic_path <- function(name, generator, frozen = NULL, ...) {
       if (tries > 10) return(NULL)
 
       dist <- proj_dist(current, target)
+      cat("generation:  dist =  ", dist, "\n")
     }
 
     #geodesic_path(current, target, frozen)

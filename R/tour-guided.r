@@ -47,25 +47,19 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
   generator <- function(current, data) {
     #browser()
 
-    index <- function(proj) {
+    index <<- function(proj) {
       index_f(as.matrix(data) %*% proj)
     }
 
 
     if (is.null(current)) {
 
-      current <- basis_init(ncol(data), d)
+      current <- basis_random(ncol(data), d)
       cur_index <<- index(current)
 
       record <<- tibble(counter = 1,
-                       basis = list(basis_init(ncol(data), d))) %>%
+                       basis = list(basis_random(ncol(data), d))) %>%
         mutate(index_val = map_dbl(basis, index))
-
-      # record$counter[1] <<- 1L
-      # record$basis[[1]] <<- basis_init(ncol(data), d)
-      # record$index_val[1] <<- index(record$basis[[1]])
-
-
 
       return(current)
     }

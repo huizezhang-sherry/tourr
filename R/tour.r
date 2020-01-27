@@ -39,6 +39,7 @@ new_tour <- function(data, tour_path, start = NULL) {
   function(step_size) {
     #browser()
 
+    cat("target_dist - cur_dist:",target_dist - cur_dist,  "\n")
     step <<- step + 1
     cur_dist <<- cur_dist + step_size
 
@@ -69,11 +70,24 @@ new_tour <- function(data, tour_path, start = NULL) {
       }
 
       step <<- 0
+
     }
 
+
     proj <<- geodesic$interpolate(cur_dist / target_dist)
-    record <<- record
+
+    temp <- tibble(counter = counter,
+                   basis = list(proj),
+                   index_val = index(proj),
+                   info = "interpolation",
+                   tries = tries)
+
+    record <<- record %>% bind_rows(temp)
+
+
     list(proj = proj, target = target, step = step, record = record)
+
+
   }
 
 }

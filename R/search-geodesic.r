@@ -19,10 +19,10 @@
 #' @param cur_index index value for starting projection, set NA if it needs to
 #'   be calculated
 #' @keywords optimize
-search_geodesic <- function(current, alpha = 1, index, max.tries = 125, n = 5, stepS = 0.01, cur_index = NA) {
+search_geodesic <- function(current, alpha = 1, index, max.tries = 55, n = 5, stepS = 0.01, cur_index = NA) {
   #browser()
   if (is.na(cur_index)) cur_index <- index(current)
-  max.tries <-  125
+  max.tries <-  100
 
   counter <<- 2
 
@@ -72,7 +72,7 @@ search_geodesic <- function(current, alpha = 1, index, max.tries = 125, n = 5, s
 #' @param dist step size in radians, should be small
 #' @param number of random steps to take
 find_best_dir <- function(old, index, dist = 0.01, tries = 5) {
-  old <- matrix(unlist(old), ncol = 2)
+  old <- matrix(unlist(old), ncol = ncol(old))
   bases <- replicate(tries, basis_random(nrow(old), ncol(old)),
     simplify = FALSE)
 
@@ -110,7 +110,7 @@ find_best_dir <- function(old, index, dist = 0.01, tries = 5) {
 #' @param max_dist maximum distance to travel along in radians
 #' @keywords optimize internal
 find_path_peak <- function(old, new, index, max_dist = pi / 4) {
-  old <- matrix(unlist(old), ncol = 2)
+  old <- matrix(unlist(old), ncol = ncol(old))
   interpolator <- geodesic_info(old, new)
 
   index_pos <- function(alpha) index(step_angle(interpolator, alpha))
