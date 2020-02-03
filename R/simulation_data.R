@@ -21,29 +21,25 @@ x10 <- rnorm(100, 0, 1)
 
 
 
-var <- list(x2 = x2,
-            x3 = x3,
-            x4 = x4,
-            x5 = x5,
-            x6 = x6,
-            x7 = x7)
-
-names <- list("x2", "x3", "x4", "x5", "x6", "x7")
+var <- list(x2 = x2)
 
 
-result_geodesic <- purrr::map2_df(var, names, function(var, names){
+
+names <- list("x2")
+
+result_geodesic_old <- purrr::map2_df(var, names, function(var, names){
   data <- cbind(x1, x8, x9, x10, var)
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
-                                       search_f = search_geodesic),
+                                       search_f = search_geodesic_latest),
                          sphere = TRUE) %>%
     mutate(col = names)
   result
 }) %>%
   mutate(method = "geodesic")
 
-result_geodesic  %>%
+result_geodesic_old  %>%
   filter(info == "interpolation")  %>%
   group_by(col) %>%
   mutate(id = row_number()) %>%
@@ -51,7 +47,7 @@ result_geodesic  %>%
   geom_line() +
   facet_wrap(vars(col))
 
-#save(result_geodesic, file = "result_geodesic.rda")
+#save(result_geodesic_old, file = "result_geodesic_old.rda")
 
 
 result_better <- purrr::map2_df(var, names, function(var, names){
