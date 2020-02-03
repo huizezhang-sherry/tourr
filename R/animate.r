@@ -35,7 +35,7 @@
 #' animate(f, max_frames = 30)
 #'
 #' \dontrun{animate(f, max_frames = 10, fps = 1, aps = 0.1)}
-animate <- function(data, tour_path = grand_tour(), display = display_xy(), start = NULL, aps = 1, fps = 30, max_frames = 25, rescale = TRUE, sphere = FALSE, ...) {
+animate <- function(data, tour_path = grand_tour(), display = display_xy(), start = NULL, aps = 1, fps = 30, max_frames = 39, rescale = TRUE, sphere = FALSE, ...) {
   #browser()
   if (!is.matrix(data)) {
     message("Converting input data to the required matrix format.")
@@ -114,8 +114,7 @@ animate <- function(data, tour_path = grand_tour(), display = display_xy(), star
     invisible(bases[, , seq_len(b)])
   }
 
-  optim_obj <<- record
-  return(optim_obj)
+  return(record)
 }
 
 rstudio_gd <- function() identical(names(dev.cur()), "RStudioGD")
