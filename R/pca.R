@@ -1,4 +1,4 @@
-load("result_geodesic.rda")
+load("result_geodesic_old.rda")
 library(foreach)
 library(factoextra)
 
