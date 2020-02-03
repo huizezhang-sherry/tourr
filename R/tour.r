@@ -76,8 +76,7 @@ new_tour <- function(data, tour_path, start = NULL) {
 
     proj <<- geodesic$interpolate(cur_dist / target_dist)
 
-    temp <- tibble(counter = counter,
-                   basis = list(proj),
+    temp <- tibble(basis = list(proj),
                    index_val = index(proj),
                    info = "interpolation",
                    tries = tries)

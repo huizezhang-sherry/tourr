@@ -42,7 +42,6 @@
 
 guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries = 25, max.i = Inf, search_f = search_geodesic, ...) {
   #browser()
-  # init
 
   generator <- function(current, data) {
     #browser()
@@ -54,12 +53,13 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
 
     if (is.null(current)) {
 
-      current <- basis_random(ncol(data), d)
+      current <- basis_init(ncol(data), d)
       cur_index <<- index(current)
 
-      record <<- tibble(counter = 1,
-                       basis = list(basis_random(ncol(data), d))) %>%
-        mutate(index_val = map_dbl(basis, index))
+      record <<- tibble(basis = list(basis_init(ncol(data), d))) %>%
+        mutate(index_val = map_dbl(basis, index),
+               tries = 1)
+      tries <<- 0
 
       return(current)
     }
@@ -88,7 +88,7 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
     alpha <<- alpha * cooling
     record <<- record
 
-    basis$current
+    basis$target
 
   }
 
