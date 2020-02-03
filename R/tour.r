@@ -54,11 +54,13 @@ new_tour <- function(data, tour_path, start = NULL) {
     if (cur_dist >= target_dist) {
       tour_path_obj <<- tour_path(proj, data)
       geodesic <<- tour_path_obj[["geo"]]
-      record <<- tour_path_obj[["record"]]
+
       #cat("print record_val", record$index_val, "\n")
       if (is.null(geodesic)) {
         return(list(proj = proj, target = target, step = -1, record = record)) #use negative step size to signal that we have reached the final target
       }
+
+      record <<- tour_path_obj[["record"]]
 
       target_dist <<- geodesic$dist
       target <<- geodesic$Fz
