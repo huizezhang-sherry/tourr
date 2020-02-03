@@ -32,10 +32,10 @@ new_geodesic_path <- function(name, generator, frozen = NULL, ...) {
 
     # Keep trying until we get a frame that's not too close to the
     # current frame
-    dist <- 0; tries <- 0
+    dist <- 0
+    tries <<- tries + 1
     while (dist < 1e-3) {
-      #browser()
-      tries <<- tries
+
       target <- generator(current, data)
 
       # generator has run out, so give up
