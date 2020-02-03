@@ -12,7 +12,7 @@ origin_dt <- tibble::tibble(x1 = x1, x2 = x2, x8 = x8,
   gather(names, values) %>%
   mutate(names = as_factor(names),
          names = fct_relevel(names, levels = c("x1", "x2", "x8", "x9", "x10")))
-#save(origin_dt,file = "origin_dt.rda")
+#save(origin_dt,file = "tour_optim_doc/origin_dt.rda")
 
 origin_dt %>%
   ggplot(aes(x = values)) +
@@ -61,7 +61,7 @@ compute_pca <- function(data, names){
 ################################
 set.seed(1234)
 x2_geodesic <- compute_global_object_geodesic(x2, "x2")
-#save(x2_geodesic, file = "x2_geodesic.rda")
+#save(x2_geodesic, file = "tour_optim_doc/x2_geodesic.rda")
 
 x2_object <- x2_geodesic %>% compute_pca("x2")
-#save(x2_object, file = "x2_object.rda")
+#save(x2_object, file = "tour_optim_doc/x2_object.rda")

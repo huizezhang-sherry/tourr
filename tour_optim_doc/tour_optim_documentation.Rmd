@@ -69,8 +69,6 @@ ggplot(data = x2_object_path, aes(x= PC1, y = PC2)) +
   theme(aspect.ratio = 1)
 
 # colour the interpolation from all the bases
-# library(scales)
-# show_col(hue_pal()(3))
 x2_interpolate <- x2_object %>% 
   filter(info == "interpolation") %>% 
   mutate(id2 = lag(id),
