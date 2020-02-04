@@ -100,7 +100,7 @@ find_best_dir <- function(old, index, dist = 0.01, tries = 5) {
   }
   scores <- sapply(bases, score)
 
-  record_temp <- enframe(bases) %>%
+  record_temp <- tibble::enframe(bases) %>%
     rename(basis = value) %>%
     mutate(index_val = map_dbl(basis, index),
            info = "direction_search") %>%
@@ -148,7 +148,7 @@ find_path_peak <- function(old, new, index, max_dist = pi / 4) {
 
   angle <-  sample(seq((-pi/4), (pi/4), 0.01), 5)
 
-  record_temp <- enframe(map(angle,
+  record_temp <- tibble::enframe(map(angle,
                              function(x) step_angle(interpolator, x))) %>%
     rename(basis = value) %>%
     select(-name) %>%
