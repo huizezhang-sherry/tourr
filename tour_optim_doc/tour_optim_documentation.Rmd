@@ -14,25 +14,21 @@ library(tidyverse)
 
 # Tourr: overview
 
-In general, a tour procedure invovles two major stages: generating and interpolating stage. Given a current projection basis and its corresponding index value, the generator will try to find a better basis with higher index value through optimisation. The better basis found is called the target basis and the interpolator will interpolates the current and target basis geodesically. Currently there are three optimisers in the tourr package: `search_better()`, `search_better_random()` and `search_geodesic()`. 
+The computation of a tour involves two major stages: the generating and interpolating stage. Given a current projection basis and its corresponding index value, the generator aims to try to find a better basis with higher index value through optimisation and the better basis found is called the target basis. The interpolator interpolates the current and target basis geodesically. Currently there are three optimisers in the tourr package: `search_better()`, `search_better_random()` and `search_geodesic()`. 
 
-- `search_better()` randomly generates a nearby basis and compute it index value. If the new index value is larger than the current index value the new basis will be accepted and used as the current basis for the next iteration. This process will iterate until convergence. 
+- `search_better()` randomly generates a nearby basis and compute it index value. If the index value is larger than the current index value the new basis will be accepted and used as the current basis for the next iteration. This generate-then-accept process repeats for a pre-determined number of iterations. 
 
-- `search_better_random()` modifies on top of `search_better()` to include a random component when the difference between the new index value and the current index value is less than a prescribed epsilon. This stochastic compoennt allows the optimisation to jump out of the local maximum and search for other possibilities
+- `search_better_random()` modifies on top of `search_better()` to include a random component when the difference between the new index value and the current index value is less than a prescribed epsilon ($\varepsilon$). This stochastic component allows the optimisation to jump out of the local maximum.
 
-- `search_geodesic()` uses a two-step procedure to find the basis with better index value. Five candidates bases are first generated randomly and the basis with the larget index value is choosen as the promising direction for the target basis. This step is called the direction search. The algorithm then optimises the basis (angle) along the most promising direction over a 90 degree window to find the target basis. This step is called the line search.  This two-step procedure completes one iteration in the algorithm and the algorithm ceases when the percentage change on the index value exceeds 0.001 or the number of iteration exceeds a pre-determined `max.tries`. Note that the current basis and index value should be updated in each iteration once a better target basis is found and this has yet to be implemented in the serach_geodesic function. 
-
-[add the graph]
+- `search_geodesic()` uses a two-step procedure to find the basis with better index value. Five candidates bases are first generated randomly and the basis with the largest index value is chosen as the promising direction. This step is called the direction search. The line search step then optimises the basis (angle) along the most promising direction over a 90 degree window to find the target basis.  This two-step procedure completes one iteration in the algorithm and the algorithm ceases when the percentage change on the index value exceeds 0.001 or the number of iteration exceeds a pre-determined `max.tries`. Note that the current basis and index value should be updated in each iteration once a better target basis is found and this has yet to be implemented in the `search_geodesic()` function. 
 
 
 # Global Object
-
-A global object that records all the bases, index value and auxiliary information would be useful to analysis the optimisation path of the tour and this has now been implemented in the tourr package. Along with the display the animated tour visualisation, the `animate_dist()` function would also results a tibble object that contains all the information mentioned above. 
+To understand the searching path of the basis in the optimisation, a global object that records all the bases, index value and auxiliary information would be useful. The `animate_dist()` function has been modified to result a tibble object contains all the information mentioned above, on top of its animated visualisation display. 
 
 
 # Demo
-
-Simulated data is generated using 4 random variables (`x1, x8, x9, x10`) and a bi-modal distribution generated from two normal distribution with mean at -1 and 1 (`x2`) and variance of 1. The histogram of the five variables are presented below. 
+Here I present a demonstration of how to use the modified version of tourr package and principle component analysis to understand the optimisation searching path. Simulated data is generated using 4 random variables (`x1, x8, x9, x10`) and a bi-modal distribution (`x2`). The histogram of the five variables are presented below. 
 
 ```{r}
 load("origin_dt.rda")
@@ -44,7 +40,7 @@ origin_dt %>%
   facet_wrap(vars(names), ncol = 3)
 ```
 
-Using `search_geodesic()`, the global object generated from the tour is presented below.
+Using the `search_geodesic()` optimiser, the first five rows of the global object generated from the tour is shown below.
 
 ```{r}
 load("x2_geodesic.rda")
@@ -53,17 +49,18 @@ head(x2_geodesic)
 
 Visualisation tools could help to visually inspect the bases from the tour. Using principle component analysis, we obtain the 2D projection of the 5D basis. The next three visualisations plot the first two principle components and allow us to draw some insights on the `search_geodesic` routine. 
 
-- Colored by the stage in which the basis is generated, direction search bases are further away from the interpolating bases than the line search bases.
+- Colored by the stage in which the basis is generated, direction search bases are further away from the interpolating bases than the line search bases. This shows that the direction search provides a broad exploration of the vector space while line search bases are more clustered in a smaller space (plot 1). 
 
-- Color the interpolating bases on top of the direction search and line search bases allows us to see the location of the interpolating bases better
+- Coloring the interpolating bases by start, target and interpolation on top of the direction and line search bases allows us to observe how the bases updated during the optimisation (plot 2).
 
-- Magnify the interpolating bases provides visual insight on the path of how the bases are updated.
+- Plot 3 shows the interpolating path only 
 
 ```{r}
 load("x2_object.rda")
 
 # colour by parts of optimisation
 x2_object_path <- x2_object %>% filter(!info %in% c(NA, "linear_search_best"))
+
 ggplot(data = x2_object_path, aes(x= PC1, y = PC2)) +
   geom_point(aes(col = info)) +
   theme(aspect.ratio = 1)
@@ -79,14 +76,14 @@ ggplot(data = x2_object,
        aes(x= PC1, y = PC2)) +
   geom_point(alpha = 0.7) +
   geom_point(data = x2_interpolate, aes(col = info2)) + 
-  theme(aspect.ratio = 1)
+  theme(aspect.ratio = 1) 
 
 
-# interpolation path
+# # interpolation path
 ggplot(data =x2_interpolate,
        aes(x= PC1, y = PC2)) +
   geom_point(aes(col = info2)) +
-  geom_path(linetype = "dashed") + 
+  geom_path(linetype = "dashed") +
   theme(aspect.ratio = 1)
 
 

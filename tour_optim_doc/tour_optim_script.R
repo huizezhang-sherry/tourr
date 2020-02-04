@@ -1,4 +1,10 @@
-library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(forcats)
+library(purrr)
+library(foreach)
+
 set.seed(1234)
 x1 <- rnorm(100, 0, 1)
 x2 <- c(rnorm(50, -1, 1), rnorm(50, 1, 1))
