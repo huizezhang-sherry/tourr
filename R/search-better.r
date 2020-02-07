@@ -16,51 +16,37 @@ basis_nearby <- function(current, alpha = 0.5, method = "linear") {
 search_better <- function(current, alpha = 0.5, index, max.tries = 125,
   method = "linear", cur_index = NA) {
   #browser()
-  if (is.na(cur_index)) {
-    cur_index <- index(current)
-    }
+  if (is.na(cur_index)) cur_index <- index(current)
 
-  counter <<- 2
+  try <- 1
 
-  while(counter < 125) {
+  while(try < max.tries) {
 
     new_basis <- basis_nearby(current, alpha, method)
-
     new_index <- index(new_basis)
 
+    record_temp <- tibble(basis = list(new_basis),
+                          index_val = new_index,
+                          info = "random_search",
+                          tries = tries)
+    record <- record %>% bind_rows(record_temp)
+
     if (new_index > cur_index) {
-      cur_index <- new_index
-      record_temp <<- tibble(basis = list(new_basis),
-             index_val = new_index,
-             counter = counter,
-             info = "new_basis") %>%
-        mutate(tries = tries)
-      record <<- record %>% bind_rows(record_temp)
-      counter <<- counter + 1
-    }else{
-      record_temp <<- tibble(basis = list(current),
-                             index_val = cur_index,
-                             counter = counter,
-                             info = ".") %>%
-        mutate(tries = tries)
-      record <<- record %>% bind_rows(record_temp)
-      counter <<- counter + 1
+      cur_index <<- new_index
+
+      record <<- record %>%
+        mutate(row = row_number(),
+               info = ifelse(row == max(row), "new_basis", info)) %>%
+        dplyr::select(-row)
+
+      return(list(record = record,
+                  target = record$basis[[length(record$basis)]]))
     }
 
-    test <- record %>% filter(info == "new_basis")
-
-    if(nrow(test) == 0){
-      current <- record %>%  tail(1) %>%
-        pull(basis) %>% unlist() %>% matrix(ncol = ncol(current))
-    }else{
-      best_row <- record %>% filter(info == "new_basis") %>%tail(1)
-      current <- best_row$basis[[1]]
-      cur_index <- best_row$index_val
-    }
-
+    try <- try + 1
   }
 
-  list(record = record, current = current)
+  NULL
 }
 
 #' Search for better projection, with stochastic component.
@@ -71,70 +57,46 @@ search_better_random <- function(current, alpha = 0.5, index,
   #browser()
   if (is.na(cur_index)) cur_index <- index(current)
 
-  counter <<- 1
-
-  max.tries <-  125
-  while(counter < max.tries) {
-    cat(counter, "\n")
-    #record$counter[counter] <<- counter
+  try <- 1
+  while(try < max.tries) {
     new_basis <- basis_nearby(current, alpha, method)
     new_index <- index(new_basis)
     cat("new_index", new_index, "cur_index:", cur_index, "\n")
 
+    record_temp <- tibble(basis = list(new_basis),
+                          index_val = new_index,
+                          info = "random_search",
+                          tries = tries)
+    record <- record %>% bind_rows(record_temp)
+
     if (new_index > cur_index) {
-      record_temp <<- tibble(basis = list(new_basis),
-                             index_val = new_index,
-                             counter = counter,
-                             info = "new_basis") %>%
-        mutate(tries = tries)
+      cur_index <<- new_index
 
-      record <<- record %>% bind_rows(record_temp)
+      record <<- record %>%
+        mutate(row = row_number(),
+               info = ifelse(row == max(row), "new_basis", info)) %>%
+        dplyr::select(-row)
 
-      #counter <<- counter + 1
-      cat("new_index:", counter, "\n")
-      cur_index <- new_index
+      return(list(record = record,
+                  target = record$basis[[length(record$basis)]]))
 
     }
     else if (abs(new_index-cur_index) < eps) {
       new_basis <- basis_random(nrow(current), ncol(current))
 
-      record_temp <<- tibble(basis = list(current),
-                             index_val = cur_index,
-                             counter = counter,
-                             info = "random") %>%
-        mutate(tries = tries)
+      record_temp <- tibble(basis = list(new_basis),
+                             index_val = index(new_basis),
+                             info = "random_step",
+                             tries = tries)
 
       record <<- record %>% bind_rows(record_temp)
-      cat("random:", counter, "\n")
-      #counter <<- counter + 1
-    }else{
-      record_temp <<- tibble(basis = list(current),
-                             index_val = cur_index,
-                             counter = counter,
-                             info = ".") %>%
-        mutate(tries = tries)
-      record <<- record %>% bind_rows(record_temp)
+      return(list(record = record,
+                  target = record$basis[[length(record$basis)]]))
+
     }
 
-
-    counter <<- counter + 1
-
-    test <- record %>% filter(info == "new_basis")
-
-    if(nrow(test) == 0){
-      current <- record %>%  tail(1) %>%
-        pull(basis) %>% unlist() %>% matrix(ncol = ncol(current))
-    }else{
-      best_row <- record %>% filter(info == "new_basis") %>%
-        tail(1)
-
-      current <- best_row$basis[[1]]
-    }
+    try <-  try + 1
   }
-
-
-  list(record = record,
-       current = current)
 }
 
 
