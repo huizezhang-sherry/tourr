@@ -27,17 +27,15 @@ search_geodesic_latest <- function(current, alpha = 1, index, max.tries = 5, n =
   while(try < max.tries) {
     # Try 5 random directions and pick the one that has the highest
     # index after a small step in either direction
-    direction <- find_best_dir(current, index, tries = n, dist=stepS)
+    # change the original parameter tries to counter since it conflicts with the tries in geodesic-path.r
+    direction <- find_best_dir(current, index, counter = n, dist=stepS)
     best_dir <- direction$best_dir
-    direction_record <- direction$record_temp %>%
-      mutate(tries = tries)
 
     # Travel halfway round (pi / 4 radians) the sphere in that direction
     # looking for the best projection
-    peak <- find_path_peak(current, best_dir, index) %>%
-      mutate(tries = tries)
+    peak <- find_path_peak(current, best_dir, index) %>% mutate(tries = tries)
 
-    record <<- bind_rows(record, direction_record, peak)
+    record <<- bind_rows(record, direction$record_temp, peak)
     new_index <- tail(peak$index_val,1)
     pdiff <- (new_index- cur_index)/cur_index
 
@@ -48,6 +46,7 @@ search_geodesic_latest <- function(current, alpha = 1, index, max.tries = 5, n =
         sprintf("%.1f", pdiff * 100), "% better ")
     if (pdiff > 0.001) {
       cat(" - NEW BASIS\n")
+      cur_index <<- new_index
       return(list(record = record,
                   target = record$basis[[length(record$basis)]]))
     }
@@ -86,9 +85,11 @@ search_geodesic_latest <- function(current, alpha = 1, index, max.tries = 5, n =
 #' @param index interestingness index function
 #' @param dist step size in radians, should be small
 #' @param number of random steps to take
-find_best_dir <- function(old, index, dist = 0.01, tries = 5) {
-  old <- matrix(unlist(old), ncol = ncol(old))
-  bases <- replicate(tries, basis_random(nrow(old), ncol(old)),
+find_best_dir <- function(old, index, dist = 0.01, counter = 5) {
+#browser()
+
+  # change the original parameter tries to counter since it conflicts with the tries in geodesic-path.r
+  bases <- replicate(counter, basis_random(nrow(old), ncol(old)),
                      simplify = FALSE)
 
   score <- function(new) {
@@ -96,18 +97,20 @@ find_best_dir <- function(old, index, dist = 0.01, tries = 5) {
     forward <- step_angle(interpolator, dist)
     backward <- step_angle(interpolator, -dist)
 
-    max(index(forward), index(backward))
+    index_val_larger <- max(index(forward), index(backward))
+
+    tibble::tibble(basis = c(list(forward), list(backward)),
+           index_val = c(index(forward), index(backward)),
+           info = "direction_search",
+           tries = tries)
   }
-  scores <- sapply(bases, score)
 
-  record_temp <- tibble::enframe(bases) %>%
-    rename(basis = value) %>%
-    mutate(index_val = map_dbl(basis, index),
-           info = "direction_search") %>%
-    select(-name)
+  record_temp <<- map_df(bases, score) %>%
+    mutate(info = ifelse(index_val == max(index_val),
+                         "best_direction_search", info))
 
-  list(record_temp =record_temp,
-       best_dir = bases[[which.max(scores)]])
+  list(record_temp = record_temp,
+       best_dir = record_temp$basis[[which.max(record_temp$index_val)]])
 
 }
 
@@ -123,19 +126,8 @@ find_best_dir <- function(old, index, dist = 0.01, tries = 5) {
 #' @param index interestingness index function
 #' @param max_dist maximum distance to travel along in radians
 #' @keywords optimize internal
-find_path_peak <- function(old, new, index, max_dist = pi / 4) {
-
-
-  interpolator <- geodesic_info(old, new)
-
-  index_pos <- function(alpha) index(step_angle(interpolator, alpha))
-
-  alpha <- stats::optimize(index_pos, c(-max_dist, max_dist), maximum = TRUE, tol = 0.01)
-
-
-
-
-  old <- matrix(unlist(old), ncol = ncol(old))
+find_path_peak <- function(old, new, index, max_dist = pi / 8) {
+  #browser()
   interpolator <- geodesic_info(old, new)
 
   index_pos <- function(alpha) index(step_angle(interpolator, alpha))
@@ -144,9 +136,9 @@ find_path_peak <- function(old, new, index, max_dist = pi / 4) {
 
   best <- tibble(basis = list(step_angle(interpolator, alpha$maximum)),
                  index_val = alpha$objective,
-                 info = "linear_search_best")
+                 info = "best_line_search")
 
-  angle <-  sample(seq((-pi/4), (pi/4), 0.01), 5)
+  angle <-  sample(seq(-max_dist, max_dist, 0.01), 5)
 
   record_temp <- tibble::enframe(map(angle,
                              function(x) step_angle(interpolator, x))) %>%
@@ -159,3 +151,4 @@ find_path_peak <- function(old, new, index, max_dist = pi / 4) {
   record_temp
 
 }
+
