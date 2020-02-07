@@ -35,7 +35,7 @@
 #' animate(f, max_frames = 30)
 #'
 #' \dontrun{animate(f, max_frames = 10, fps = 1, aps = 0.1)}
-animate <- function(data, tour_path = grand_tour(), display = display_xy(), start = NULL, aps = 1, fps = 30, max_frames = 50, rescale = TRUE, sphere = FALSE, ...) {
+animate <- function(data, tour_path = grand_tour(), display = display_xy(), start = NULL, aps = 1, fps = 30, max_frames = 70, rescale = TRUE, sphere = FALSE, ...) {
   #browser()
   if (!is.matrix(data)) {
     message("Converting input data to the required matrix format.")
