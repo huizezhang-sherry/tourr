@@ -3,7 +3,6 @@ library(tidyr)
 library(ggplot2)
 library(forcats)
 library(purrr)
-library(foreach)
 
 set.seed(1234)
 x1 <- rnorm(100, 0, 1)
@@ -42,9 +41,35 @@ compute_global_object_geodesic <- function(var, names){
   return(result)
 }
 
+compute_global_object_better <- function(var, names){
+  data <- cbind(x1, x8, x9, x10, var)
+
+  result <- animate_dist(data, tour_path =
+                           guided_tour(holes(), d = 1,
+                                       search_f = search_better),
+                         sphere = TRUE) %>%
+    mutate(col = names) %>%
+    mutate(method = "better")
+
+  return(result)
+}
+
+compute_global_object_better_random <- function(var, names){
+  data <- cbind(x1, x8, x9, x10, var)
+
+  result <- animate_dist(data, tour_path =
+                           guided_tour(holes(), d = 1,
+                                       search_f = search_better_random),
+                         sphere = TRUE) %>%
+    mutate(col = names) %>%
+    mutate(method = "better_random")
+
+  return(result)
+}
+
 compute_pca <- function(data, names){
   rows <- data %>% filter(col == names)
-  pca <- foreach(i  = 1:nrow(rows), .combine = "rbind") %do%{
+  pca <- foreach::foreach(i  = 1:nrow(rows), .combine = "rbind") %do%{
     t(rows$basis[[i]])
   }
 
@@ -64,10 +89,40 @@ compute_pca <- function(data, names){
 
 }
 
+
+
 ################################
 set.seed(1234)
 x2_geodesic <- compute_global_object_geodesic(x2, "x2")
 #save(x2_geodesic, file = "tour_optim_doc/x2_geodesic.rda")
 
-x2_object <- x2_geodesic %>% compute_pca("x2")
+x2_object <- x2_geodesic %>% compute_pca("x2") %>%
+  mutate(info = fct_relevel(info, c("start", "direction_search",
+                                    "best_direction_search", "line_search",
+                                    "best_line_search")))
 #save(x2_object, file = "tour_optim_doc/x2_object.rda")
+
+
+################################
+
+set.seed(1234)
+x2_better <- compute_global_object_better(x2, "x2")
+#save(x2_better, file = "tour_optim_doc/x2_better.rda")
+
+x2_object_better <- x2_better %>% compute_pca("x2") %>%
+  mutate(info = fct_relevel(info, c("start", "random_search", "new_basis")))
+#save(x2_object_better, file = "tour_optim_doc/x2_object_better.rda")
+
+
+
+################################
+################################
+
+set.seed(1234)
+x2_better_random <- compute_global_object_better_random(x2, "x2")
+#save(x2_better_random, file = "tour_optim_doc/x2_better_random.rda")
+
+x2_object_better_random <- x2_better_random %>% compute_pca("x2") %>%
+  mutate(info = fct_relevel(info, c("start", "random_search", "new_basis")))
+
+#save(x2_object_better_random, file = "tour_optim_doc/x2_object_better_random.rda")
