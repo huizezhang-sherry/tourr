@@ -2,13 +2,16 @@
 title: "tour_optim_documentation"
 author: "Huize Zhang"
 date: "2/3/2020"
-output: ["pdf_document", "html_document"]
+output: "html_document"
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = FALSE, 
-                      message = FALSE)
+                      message = FALSE, 
+                      cache = TRUE)
 library(tidyverse)
 ```
 
@@ -40,6 +43,9 @@ origin_dt %>%
   facet_wrap(vars(names), ncol = 3)
 ```
 
+
+## `search_geodesic()`
+
 Using the `search_geodesic()` optimiser, the first five rows of the global object generated from the tour is shown below.
 
 ```{r}
@@ -58,26 +64,31 @@ Visualisation tools could help to visually inspect the bases from the tour. Usin
 ```{r}
 load("x2_object.rda")
 
-# colour by parts of optimisation
-x2_object_path <- x2_object %>% filter(!info %in% c(NA, "linear_search_best"))
+# colour by parts of optimisation (static)
+x2_releveled <- x2_object %>%
+  filter(info != "interpolation") 
 
-ggplot(data = x2_object_path, aes(x= PC1, y = PC2)) +
-  geom_point(aes(col = info)) +
+x2_object %>%
+  ggplot(aes(x= PC1, y = PC2, col = info)) +
+  geom_point() +
+  geom_point(data = x2_releveled) +
   theme(aspect.ratio = 1)
 
+
+# x2_object %>% 
+#   ggplot(aes(x= PC1, y = PC2, col = info)) +
+#   geom_point() +
+#   theme(aspect.ratio = 1) 
+```
+
+
+```{r}
 # colour the interpolation from all the bases
 x2_interpolate <- x2_object %>% 
   filter(info == "interpolation") %>% 
   mutate(id2 = lag(id),
          info2 = ifelse(is.na(id2), "start", 
                         ifelse(id2 - id == -1, "interpolation", "target")))
-
-ggplot(data = x2_object,
-       aes(x= PC1, y = PC2)) +
-  geom_point(alpha = 0.7) +
-  geom_point(data = x2_interpolate, aes(col = info2)) + 
-  theme(aspect.ratio = 1) 
-
 
 # # interpolation path
 ggplot(data =x2_interpolate,
@@ -88,4 +99,94 @@ ggplot(data =x2_interpolate,
 
 
 ```
+
+```{r gganimate}
+
+# colour by parts of optimisation (animation)
+x2_animate <- x2_object %>%
+  group_by(tries, info) %>%
+  mutate(animate_id = group_indices())
+
+x2_animate %>%
+  ggplot(aes(x = PC1, y = PC2, col = info)) +
+  geom_point() +
+  theme(aspect.ratio = 1) +
+  gganimate::transition_time(animate_id) +
+  gganimate::shadow_mark()
+
+
+
+```
+
+## `search_better()`
+
+```{r better-path}
+load(here::here("tour_optim_doc", "x2_object_better.rda"))
+
+# colour by parts of optimisation (static)
+x2_better_releveled <- x2_object_better %>%
+  filter(info != "interpolation") 
+
+x2_object_better %>%
+  ggplot(aes(x= PC1, y = PC2, col = info)) +
+  geom_point() +
+  geom_point(data = x2_better_releveled) +
+  theme(aspect.ratio = 1)
+
+```
+
+
+```{r better-animation}
+# colour by parts of optimisation (animation)
+x2_better_animate <- x2_object_better %>%
+  mutate(info = fct_relevel(info, c("start", "random_search",
+                                    "new_basis", "interpolation"))) %>%
+  group_by(tries, info) %>%
+  mutate(animate_id = group_indices())
+
+x2_better_animate %>%
+  ggplot(aes(x = PC1, y = PC2, col = info)) +
+  geom_point() +
+  theme(aspect.ratio = 1) +
+  gganimate::transition_time(animate_id) +
+  gganimate::shadow_mark()
+
+
+```
+
+
+## `search_better_random()`
+
+```{r better-random-path}
+load("x2_object_better_random.rda")
+
+# colour by parts of optimisation (static)
+x2_better_random_releveled <- x2_object_better_random %>%
+  filter(info != "interpolation") 
+
+x2_object_better_random %>%
+  ggplot(aes(x= PC1, y = PC2, col = info)) +
+  geom_point() +
+  geom_point(data = x2_better_random_releveled) +
+  theme(aspect.ratio = 1)
+```
+
+
+```{r better-random-animation}
+# colour by parts of optimisation (animation)
+x2_better_random_animate <- x2_object_better_random %>%
+  mutate(info = fct_relevel(info, c("start", "random_search",
+                                    "new_basis", "interpolation"))) %>%
+  group_by(tries, info) %>%
+  mutate(animate_id = group_indices())
+
+x2_better_random_animate %>%
+  ggplot(aes(x = PC1, y = PC2, col = info)) +
+  geom_point() +
+  theme(aspect.ratio = 1) +
+  gganimate::transition_time(animate_id) +
+  gganimate::shadow_mark()
+```
+
+
 
