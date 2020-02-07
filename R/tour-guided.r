@@ -58,7 +58,8 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
 
       record <<- tibble(basis = list(basis_init(ncol(data), d))) %>%
         mutate(index_val = map_dbl(basis, index),
-               tries = 1)
+               tries = 1,
+               info = "start")
       tries <<- 0
 
       return(current)
