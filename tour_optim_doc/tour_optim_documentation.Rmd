@@ -10,8 +10,7 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = FALSE, 
-                      message = FALSE, 
-                      cache = TRUE)
+                      message = FALSE)
 library(tidyverse)
 ```
 
@@ -94,8 +93,7 @@ x2_interpolate <- x2_object %>%
 ggplot(data =x2_interpolate,
        aes(x= PC1, y = PC2)) +
   geom_point(aes(col = info2)) +
-  geom_path(linetype = "dashed") +
-  theme(aspect.ratio = 1)
+  geom_path(linetype = "dashed")
 
 
 ```
@@ -158,7 +156,7 @@ x2_better_animate %>%
 ## `search_better_random()`
 
 ```{r better-random-path}
-load("x2_object_better_random.rda")
+load(here::here("tour_optim_doc","x2_object_better_random.rda"))
 
 # colour by parts of optimisation (static)
 x2_better_random_releveled <- x2_object_better_random %>%
@@ -188,5 +186,15 @@ x2_better_random_animate %>%
   gganimate::shadow_mark()
 ```
 
+```{r}
+x2_sim <- rbind(x2_geodesic, x2_better, x2_better_random) %>% 
+  filter(info == c("start", "best_line_search", "new_basis")) %>% 
+  group_by(method) %>% 
+  mutate(id = row_number())
+
+x2_sim %>% 
+  ggplot(aes(x = id, y = index_val,col = method)) + 
+  geom_line()
+```
 
 
