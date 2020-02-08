@@ -73,9 +73,8 @@ compute_pca <- function(data, names){
     t(rows$basis[[i]])
   }
 
-  res.pca <- prcomp(pca)
-  loadings <- res.pca$rotation[,c(1,2)]
-  pca2 <- cbind(pca, pca %*% loadings)
+  loadings <- stats::predict(stats::prcomp(pca))[,1:2]
+  pca2 <- cbind(pca, loadings)
 
   result <- as_tibble(pca2) %>% mutate(id = 1: nrow(pca2),
                                        info = rows$info,
@@ -105,7 +104,7 @@ x2_object <- x2_geodesic %>% compute_pca("x2") %>%
 
 ################################
 
-set.seed(1234)
+set.seed(123456)
 x2_better <- compute_global_object_better(x2, "x2")
 #save(x2_better, file = "tour_optim_doc/x2_better.rda")
 
@@ -118,7 +117,7 @@ x2_object_better <- x2_better %>% compute_pca("x2") %>%
 ################################
 ################################
 
-set.seed(1234)
+set.seed(123456)
 x2_better_random <- compute_global_object_better_random(x2, "x2")
 #save(x2_better_random, file = "tour_optim_doc/x2_better_random.rda")
 
