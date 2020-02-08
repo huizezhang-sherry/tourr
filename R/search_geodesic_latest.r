@@ -93,6 +93,7 @@ find_best_dir <- function(old, index, dist = 0.01, counter = 5) {
                      simplify = FALSE)
 
   score <- function(new) {
+    #browser()
     interpolator <- geodesic_info(old, new)
     forward <- step_angle(interpolator, dist)
     backward <- step_angle(interpolator, -dist)
@@ -126,7 +127,7 @@ find_best_dir <- function(old, index, dist = 0.01, counter = 5) {
 #' @param index interestingness index function
 #' @param max_dist maximum distance to travel along in radians
 #' @keywords optimize internal
-find_path_peak <- function(old, new, index, max_dist = pi / 8) {
+find_path_peak <- function(old, new, index, max_dist = pi / 4) {
   #browser()
   interpolator <- geodesic_info(old, new)
 
