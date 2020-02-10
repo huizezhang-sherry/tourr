@@ -1,0 +1,341 @@
+---
+title: "Choice of alpha and cooling parameter"
+author: "Huize Zhang"
+date: "10/02/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(forcats)
+library(purrr)
+library(foreach)
+
+load(here::here("tour_optim_doc", "better_alpha.rda"))
+load(here::here("tour_optim_doc","better_random_alpha.rda"))
+load(here::here("tour_optim_doc", "geodesic_alpha.rda"))
+```
+
+Key points: 
+
+`search_better()` & `search_better_random()`
+
+- A larger cooling parameter leads to longer interpolation path but this doesn't necessarily translate into higher ending index_val
+
+- A larger alpha parameter results in a more fluctuated interpolation path, which makes the algorithm less efficient.
+
+- The difference between the two algorithm is not shown for combination of large cooling & alpha. 
+
+- `search_better_random` doesn't result in better ending index_val than `search_better`, this could because eps is default to be too small.
+
+- The default value of alpha and cooling could be set to better values. Suggest 0.2 - 0.3 for alpha and 0.8 - 0.85 for cooling
+
+`search_geodesic`: 
+
+- The search_geodesic doesn't seem to have high fluctuation in the interpolation path. 
+
+- The default value of `stepS` parameter could be set to better value: 0.5 would be good.
+
+
+## Preliminary
+
+The choose of alpha parameter requires causion.
+ 
+ - An alpha value that is too small i.e. 1e-4, 1e-3 would not make the search
+ 
+ - A small alpha value results in a close neighbourhood in the searching
+with a cooling parameter, the searching space will become smaller and smaller.
+Thus, the algorithm may not be able to find the global maximum
+
+- A large alpha value allows for a larger searching space, however,
+it is likely that there exists a basis on the interpolating path that has higher index_val this makes the searching inefficient
+
+The choose of cooling parameter determins how fast alpha decreases in the tour.
+
+## Simulation experiment
+
+A simulation with different grid values of alpha and cooling parameter: 
+
+- `search_better()` & `search_better_random()`
+
+  - alpha: 0.1, 0.2, 0.3, 0.4 ,0.5(default)
+  - cooling: 0.8, 0.85, 0.9, 0.95, 0.99(default), 0.995
+
+- `search_geodesic()`
+
+  - stepS: 0.001, 0.01 (default), 0.1, 0.5
+
+## Result
+
+### Cooling and alpha parameter
+
+**1. A starting parameter of `alpha = 0.5` is not efficient for `search_better()` & `search_better_random()`**
+  
+  - The default `alpha = 0.5` and `cooling = 0.99` 
+  - Different cooling values for the same alpha value 
+  - Different alpha values for the same cooling value
+
+Potential solution: 
+
+- set the alpha to 0.2 or 0.3 as default
+- Stop the interpolating process if the index_val is keep decreasing for five interpolating basis. 
+
+```{r default-paras}
+temp <- better_alpha %>% 
+  filter(info %in% c("new_basis","interpolation", "start"), 
+         alpha == 0.5, cooling == 0.99) %>% 
+  mutate(id = row_number()) %>% 
+  group_by(tries) %>% 
+  nest()
+
+amend_id <- function(data){
+  data %>%  
+    mutate(id = ifelse(info == "interpolation", id, 
+                       ifelse(info == "start", id, id + nrow(data) - 1)))
+}
+
+dt <- map_df(temp$data,amend_id)  %>% 
+  mutate(info = ifelse(info == "interpolation", info, "search")) %>%
+  mutate(id = case_when(id == 1 ~ id, 
+                        between(id, 2, 20) ~ id - 2, 
+                        between(id, 21, 43) ~ id - 3, 
+                        between(id, 45, 53) ~ id - 4), 
+         id = ifelse(info == "search" & id == 18,  id -1, id)) 
+
+dt %>% 
+  ggplot(aes(x = id, y = index_val, col = info)) + 
+  geom_point() + 
+  geom_line() + 
+  ggtitle("search_better- default alpha = 0.5, cooling = 0.99")
+```
+
+The blue points are the target bases found in the search and the red path is the interpolation path. The searching are finding the target bases with higher index_val but there are points with even higher index_val on the interpolating path (see the hill shape). 
+
+#### **cooling parameter**
+
+Facet by alpha allows for seeing the effect of different cooling value under the same alpha. A larger alpha value makes the searching / interpolating path longer but it doesnt not translate into larger index_val. Also, the larger the alpha, the more fluctuate the searching path. The plot for  using `search_better_random()` shows the same information. 
+
+```{r hill-climbing - cooling}
+better_interp <- better_alpha %>%
+  filter(info == "interpolation") %>%
+  group_by(alpha, cooling) %>%
+  mutate(id = row_number()) %>% 
+  ungroup() %>% 
+  mutate(alpha = as.factor(alpha), 
+         cooling = as.factor(cooling))
+
+random_interp <- better_random_alpha %>%
+  filter(info == "interpolation") %>%
+  group_by(alpha, cooling) %>%
+  mutate(id = row_number()) %>% 
+  ungroup() %>% 
+  mutate(alpha = as.factor(alpha), 
+         cooling = as.factor(cooling))
+
+better_interp %>%
+  ggplot(aes(x = id, y = index_val, col = cooling)) +
+  geom_line() +
+  facet_wrap(vars(alpha)) + 
+  ggtitle("search_better - different cooling values for the same alpha")
+```
+
+```{r eval = FALSE}
+random_interp %>%
+  ggplot(aes(x = id, y = index_val, col = cooling)) +
+  geom_line() +
+  facet_wrap(vars(alpha)) + 
+  ggtitle("search_better_random - different cooling values for the same alpha")
+
+```
+
+#### **alpha parameter**
+
+Plot the index_val along the interpolation path for different combination of alpha and cooling parameter. For all cooling parameters, the alpha = 0.5 path shows the heavy fluctuation in the interpolating path. It seems that an alpha value of 0.2 or 0.3 are more likely to attain a higher index_val. The plot for  using `search_better_random()` shows the same information. 
+
+```{r better-hill-climbing}
+better_interp %>%
+  ggplot(aes(x = id, y = index_val, col = alpha)) +
+  geom_line() +
+  facet_wrap(vars(cooling)) + 
+  ggtitle("search_better - different alpha values for the same cooling")
+```
+
+
+```{r better-random-hill-climbing, eval = FALSE}
+random_interp %>%
+  ggplot(aes(x = id, y = index_val, col = alpha)) +
+  geom_line() +
+  facet_wrap(vars(cooling)) + 
+  ggtitle("search_better_random - different alpha values for the same cooling")
+```
+
+
+#### **ending index_val**
+
+```{r better-index-val}
+max_index_val <- better_alpha %>%
+  filter(info == "new_basis") %>%
+  group_by(alpha, cooling) %>%
+  filter(index_val == max(index_val)) %>%
+  ungroup() %>%
+  mutate(alpha = as.factor(alpha),
+         cooling = as.factor(cooling))
+
+best_better <- max_index_val %>% filter(index_val == max(index_val))
+
+max_index_val %>%
+  ggplot(aes(x = alpha, y = cooling)) +
+  geom_raster(aes(fill = index_val)) +
+  geom_tile(data = best_better, size = 2, fill = NA, col = "red") +
+  geom_text(aes(label = round(index_val, 4)), col = "white")
+```
+
+The tile plot shows the end index_val returned for different combination of the grid value. It suggested that a lower alpha value of 0.2 or 0.3 and a lower cooling parameter from 0.8 to 0.9 are likely to result in higher ending index_val. `search_better_random()` shows the same. 
+
+```{r better-random-index-val}
+random_max_index_val <- better_random_alpha %>%
+  filter(info == "new_basis") %>%
+  group_by(alpha, cooling) %>%
+  filter(index_val == max(index_val)) %>%
+  ungroup() %>%
+  mutate(alpha = as.factor(alpha),
+         cooling = as.factor(cooling))
+
+best_random <- random_max_index_val %>% filter(index_val == max(index_val))
+
+random_max_index_val %>%
+  ggplot(aes(x = alpha, y = cooling)) +
+  geom_raster(aes(fill = index_val)) +
+  geom_tile(data = best_random, size = 2, fill = NA, col = "red") +
+  geom_text(aes(label = round(index_val, 4)), col = "white")
+```
+
+### **2. Comparison between `search_better()` and `search_better_random()`**
+
+- For a small alpha value, 0.1, the trigger of random step in `search_better_random` doesn't result in a larger ending index_val. 
+
+- For combination of large cooling and alpha value, `search_better_random` is doing the same as `search_better`. This is because when the searching neighbourhood becomes large, the searching algorithm is likely to find a much better index_val that result in a large difference in `new_index-cur_index`. 
+
+- We could also play around with different eps value to see if things would change if eps is larger.
+
+```{r}
+bind_rows(random_max_index_val,max_index_val) %>% 
+  ggplot(aes(x = cooling , y = index_val, col = method)) + 
+  geom_point() + 
+  facet_wrap(vars(alpha))
+```
+
+```{r eval = FALSE}
+bind_rows(random_max_index_val,max_index_val) %>% 
+  ggplot(aes(x = alpha , y = index_val, col = method)) + 
+  geom_point() + 
+  facet_wrap(vars(cooling))
+```
+
+
+
+### **3. A starting value of `stepS = 0.01` is also too small for search_geodesic()**
+
+- `search_geodesic()` doesn't seem to have the hill-and-valley pattern in the searching path. 
+
+- An default value of 0.01 is small too small for `stepS`. An initial value around 0.5 would be a better alternative.
+
+
+```{r geodesic-hill-climbing}
+geodesic_clean <- geodesic_alpha %>%
+  filter(info == "interpolation") %>%
+  mutate(stepS = as.factor(stepS)) 
+
+geodesic_interp <- geodesic_clean %>% 
+  group_by(stepS) %>% 
+  mutate(id = row_number())
+  
+best <- geodesic_clean %>% 
+  group_by(stepS) %>% 
+  mutate(id = row_number()) %>% 
+  filter(index_val == max(index_val))
+
+geodesic_interp %>%
+  ggplot(aes(x = id, y = index_val, col = stepS)) +
+  geom_path() + 
+  ggrepel::geom_text_repel(data = best, aes(label = round(index_val, 4)))
+```
+
+
+some other stuff
+
+
+```{r function}
+compute_pca <- function(data){
+
+  pca <- foreach::foreach(i  = 1:nrow(data), .combine = "rbind") %do%{
+    t(data$basis[[i]])
+  }
+
+  loadings <- stats::predict(stats::prcomp(pca))[,1:2]
+  pca2 <- cbind(pca, loadings)
+
+  result <- as_tibble(pca2) %>% mutate(id = 1: nrow(pca2),
+                                       info = data$info,
+                                       tries = data$tries,
+                                       index_val = data$index_val)
+
+  colnames(result)[1:5] <- c("x1", "x8", "x9", "x10", "x2")
+
+  return(result)
+
+}
+```
+
+
+```{r better-random-pca}
+pca_better_random <- better_random_alpha %>%
+  group_by(alpha, cooling) %>%
+  nest() %>%
+  mutate(pca = map(data, compute_pca)) %>%
+  dplyr::select(alpha, cooling, pca) %>%
+  unnest(pca)
+
+pca_plot_br <- pca_better_random %>% filter(info %in% c("start",
+                                       "interpolation"))
+
+pca_plot_br %>%
+  ggplot(aes(x= PC1, y = PC2, col = info)) +
+  geom_point() +
+  geom_point(data = filter(pca_plot_br, info == "start")) +
+  geom_text(data = filter(pca_plot_br, index_val == max(index_val)),
+            aes(label = round(index_val, 3)), col = "black") +
+  theme(aspect.ratio = 1) +
+  facet_grid(alpha ~cooling)
+```
+
+
+```{r geodesic-pca}
+pca_geodesic <- geodesic_alpha %>%
+  group_by(stepS) %>%
+  nest() %>%
+  mutate(pca = map(data, compute_pca)) %>%
+  dplyr::select(stepS, pca) %>%
+  unnest(pca)
+
+pca_plot_geodesic <- pca_geodesic %>% filter(info %in% c("start",
+                                       "interpolation"))
+
+pca_plot_geodesic %>%
+  ggplot(aes(x= PC1, y = PC2, col = info)) +
+  geom_point() +
+  geom_point(data = filter(pca_plot_geodesic, info == "start")) +
+  geom_text(data = filter(pca_plot_geodesic, index_val == max(index_val)),
+                          aes(label = round(index_val, 3)), col = "black") +
+  theme(aspect.ratio = 1) +
+  facet_wrap(vars(stepS))
+```
+
+
+
+
