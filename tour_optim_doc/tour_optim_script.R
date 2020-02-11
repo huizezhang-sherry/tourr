@@ -40,7 +40,6 @@ compute_global_object_geodesic <- function(var, names){
 
   return(result)
 }
-
 compute_global_object_better <- function(var, names){
   data <- cbind(x1, x8, x9, x10, var)
 
@@ -53,7 +52,6 @@ compute_global_object_better <- function(var, names){
 
   return(result)
 }
-
 compute_global_object_better_random <- function(var, names){
   data <- cbind(x1, x8, x9, x10, var)
 
@@ -66,7 +64,6 @@ compute_global_object_better_random <- function(var, names){
 
   return(result)
 }
-
 compute_pca <- function(data, names){
   rows <- data %>% filter(col == names)
   pca <- foreach::foreach(i  = 1:nrow(rows), .combine = "rbind") %do%{
@@ -80,6 +77,7 @@ compute_pca <- function(data, names){
                                        info = rows$info,
                                        V5_names = rows$col,
                                        tries = rows$tries,
+                                       loop = rows$loop,
                                        index_val = rows$index_val)
 
   colnames(result)[1:4] <- c("x1", "x8", "x9", "x10")
@@ -113,8 +111,6 @@ x2_object_better <- x2_better %>% compute_pca("x2") %>%
 #save(x2_object_better, file = "tour_optim_doc/x2_object_better.rda")
 
 
-
-################################
 ################################
 
 set.seed(123456)
@@ -123,5 +119,4 @@ x2_better_random <- compute_global_object_better_random(x2, "x2")
 
 x2_object_better_random <- x2_better_random %>% compute_pca("x2") %>%
   mutate(info = fct_relevel(info, c("start", "random_search", "new_basis")))
-
 #save(x2_object_better_random, file = "tour_optim_doc/x2_object_better_random.rda")

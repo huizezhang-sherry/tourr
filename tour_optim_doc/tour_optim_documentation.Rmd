@@ -10,7 +10,8 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = FALSE, 
-                      message = FALSE)
+                      message = FALSE,
+                      cache = TRUE)
 library(tidyverse)
 ```
 
@@ -54,14 +55,14 @@ head(x2_geodesic)
 
 Visualisation tools could help to visually inspect the bases from the tour. Using principle component analysis, we obtain the 2D projection of the 5D basis. The next three visualisations plot the first two principle components and allow us to draw some insights on the `search_geodesic` routine. 
 
-- Colored by the stage in which the basis is generated, direction search bases are further away from the interpolating bases than the line search bases. This shows that the direction search provides a broad exploration of the vector space while line search bases are more clustered in a smaller space (plot 1). 
+<!-- - Colored by the stage in which the basis is generated, direction search bases are further away from the interpolating bases than the line search bases. This shows that the direction search provides a broad exploration of the vector space while line search bases are more clustered in a smaller space (plot 1).  -->
 
-- Coloring the interpolating bases by start, target and interpolation on top of the direction and line search bases allows us to observe how the bases updated during the optimisation (plot 2).
+<!-- - Coloring the interpolating bases by start, target and interpolation on top of the direction and line search bases allows us to observe how the bases updated during the optimisation (plot 2). -->
 
-- Plot 3 shows the interpolating path only 
+
 
 ```{r}
-load("x2_object.rda")
+load(here::here("tour_optim_doc", "x2_object.rda"))
 
 # colour by parts of optimisation (static)
 x2_releveled <- x2_object %>%
@@ -81,7 +82,7 @@ x2_object %>%
 ```
 
 
-```{r}
+```{r eval = FALSE}
 # colour the interpolation from all the bases
 x2_interpolate <- x2_object %>% 
   filter(info == "interpolation") %>% 
@@ -102,17 +103,17 @@ ggplot(data =x2_interpolate,
 
 # colour by parts of optimisation (animation)
 x2_animate <- x2_object %>%
-  group_by(tries, info) %>%
+  group_by(tries, info, loop) %>%
   mutate(animate_id = group_indices())
 
-x2_animate %>%
+geo_animate <- x2_animate %>%
   ggplot(aes(x = PC1, y = PC2, col = info)) +
-  geom_point() +
+  geom_point(size = 0.3) +
   theme(aspect.ratio = 1) +
   gganimate::transition_time(animate_id) +
   gganimate::shadow_mark()
 
-
+gganimate::animate(geo_animate, fps = 2)
 
 ```
 
@@ -186,8 +187,8 @@ x2_better_random_animate %>%
   gganimate::shadow_mark()
 ```
 
-```{r}
-x2_sim <- rbind(x2_geodesic, x2_better, x2_better_random) %>% 
+```{r eval = FALSE}
+x2_sim <- rbind(x2_geodesic, x2_object_better, x2_better_random) %>% 
   filter(info == c("start", "best_line_search", "new_basis")) %>% 
   group_by(method) %>% 
   mutate(id = row_number())
