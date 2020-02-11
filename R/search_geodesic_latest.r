@@ -30,12 +30,14 @@ search_geodesic_latest <- function(current, alpha = 1, index, max.tries = 5, n =
     # change the original parameter tries to counter since it conflicts with the tries in geodesic-path.r
     direction <- find_best_dir(current, index, counter = n, dist=stepS)
     best_dir <- direction$best_dir
+    direction_search <- direction$record_temp %>% mutate(loop = try)
 
     # Travel halfway round (pi / 4 radians) the sphere in that direction
     # looking for the best projection
-    peak <- find_path_peak(current, best_dir, index) %>% mutate(tries = tries)
+    peak <- find_path_peak(current, best_dir, index) %>%
+      mutate(tries = tries, loop = try)
 
-    record <<- bind_rows(record, direction$record_temp, peak)
+    record <<- bind_rows(record, direction_search, peak)
     new_index <- tail(peak$index_val,1)
     pdiff <- (new_index- cur_index)/cur_index
 

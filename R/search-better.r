@@ -28,7 +28,8 @@ search_better <- function(current, alpha = 0.5, index, max.tries = 125,
     record_temp <- tibble(basis = list(new_basis),
                           index_val = new_index,
                           info = "random_search",
-                          tries = tries)
+                          tries = tries,
+                          loop = try)
     record <- record %>% bind_rows(record_temp)
 
     if (new_index > cur_index) {
@@ -66,7 +67,8 @@ search_better_random <- function(current, alpha = 0.5, index,
     record_temp <- tibble(basis = list(new_basis),
                           index_val = new_index,
                           info = "random_search",
-                          tries = tries)
+                          tries = tries,
+                          loop = try)
     record <- record %>% bind_rows(record_temp)
 
     if (new_index > cur_index) {
@@ -87,7 +89,8 @@ search_better_random <- function(current, alpha = 0.5, index,
       record_temp <- tibble(basis = list(new_basis),
                              index_val = index(new_basis),
                              info = "random_step",
-                             tries = tries)
+                             tries = tries,
+                            loop = try)
 
       record <<- record %>% bind_rows(record_temp)
       return(list(record = record,
