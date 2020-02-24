@@ -16,9 +16,9 @@ library(forcats)
 library(purrr)
 library(foreach)
 
-load(here::here("tour_optim_doc", "better_alpha.rda"))
-load(here::here("tour_optim_doc","better_random_alpha.rda"))
-load(here::here("tour_optim_doc", "geodesic_alpha.rda"))
+load(here::here("sherry", "data", "better_alpha.rda"))
+load(here::here("sherry", "data", "better_random_alpha.rda"))
+load(here::here("sherry", "data", "geodesic_alpha.rda"))
 ```
 
 Key points: 
