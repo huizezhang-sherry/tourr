@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = FALSE,
                       message = FALSE,
                       cache = TRUE)
 library(tidyverse)
+library(magick)
+library(patchwork)
 ```
 
 # Tourr: overview
@@ -64,11 +66,20 @@ Visualisation tools could help to visually inspect the bases from the tour. Usin
 ```{r}
 load(here::here("sherry", "data", "x2_object.rda"))
 
+x2_object <- x2_object %>% 
+  mutate(info2 = ifelse(info %in% c("best_line_search",
+                                     "best_direction_search"), 
+                        "best", "normal"),
+         info3 = ifelse(info2 == "normal", as.character(info),
+                        str_sub(info, start = 6L, end = -1L))) %>% 
+  mutate(info3 = fct_relevel(info3, c("start", "direction_search", "line_search", "interpolation")), 
+         info2 = as.factor(info2))
+
 # colour by parts of optimisation (static)
 x2_releveled <- x2_object %>%
   filter(info != "interpolation") 
 
-x2_object %>%
+x2_object %>% 
   ggplot(aes(x= PC1, y = PC2, col = info)) +
   geom_point() +
   geom_point(data = x2_releveled) +
@@ -87,35 +98,124 @@ x2_object %>%
 x2_interpolate <- x2_object %>% 
   filter(info == "interpolation") %>% 
   mutate(id2 = lag(id),
-         info2 = ifelse(is.na(id2), "start", 
+         info4 = ifelse(is.na(id2), "start", 
                         ifelse(id2 - id == -1, "interpolation", "target")))
 
 # # interpolation path
 ggplot(data =x2_interpolate,
        aes(x= PC1, y = PC2)) +
-  geom_point(aes(col = info2)) +
+  geom_point(aes(col = info4)) +
   geom_path(linetype = "dashed")
 
 
 ```
 
-```{r gganimate}
-
+```{r geo-animate}
 # colour by parts of optimisation (animation)
 x2_animate <- x2_object %>%
-  group_by(tries, info, loop) %>%
+  mutate(loop = ifelse(info == "start", 1, loop)) %>% 
+  group_by(tries, loop, info3) %>%
   mutate(animate_id = group_indices())
 
 geo_animate <- x2_animate %>%
   ggplot(aes(x = PC1, y = PC2, col = info)) +
-  geom_point(size = 0.3) +
-  theme(aspect.ratio = 1) +
+  geom_point() +
+  theme(aspect.ratio = 1, 
+        legend.position = "none") +
   gganimate::transition_time(animate_id) +
   gganimate::shadow_mark()
 
-gganimate::animate(geo_animate, fps = 2)
+p1 <- gganimate::animate(geo_animate, fps = 2)
 
 ```
+
+```{r}
+p1
+```
+
+
+```{r index-val-animate}
+index_val_animate <- x2_animate %>% 
+  ggplot(aes(x= animate_id, y= index_val, col = info)) + 
+  geom_jitter(width = 0.0005) + 
+  theme(aspect.ratio = 1) +
+  gganimate::transition_time(animate_id) + 
+  gganimate::shadow_mark()
+
+
+p2 <- gganimate::animate(index_val_animate, fps = 2)
+```
+
+```{r combine}
+
+a_mgif <- image_read(p1)
+b_mgif <- image_read(p2)
+
+new_gif <- image_append(c(a_mgif[1], b_mgif[1]))
+for(i in 2:100){
+  combined <- image_append(c(a_mgif[i], b_mgif[i]))
+  new_gif <- c(new_gif, combined)
+}
+
+new_gif
+
+```
+
+```{r}
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length = n + 1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+x2_path <- x2_animate %>% 
+  ungroup() %>% 
+  ggplot(aes(x= animate_id, y= index_val, col = info)) + 
+  geom_point()
+  #facet_zoom(x = (tries == 7 & info %in% c("direction_search",
+  #                                               "best_direction_search")))
+   #ylim = c(0.7866, 0.7875)
+direction <- x2_animate %>% 
+  filter(tries > 5, info != "line_search") %>% 
+  ggplot(aes(x= animate_id, y= index_val, col = info)) + 
+  geom_point() + 
+  xlim(1, max(x2_animate$animate_id)) + 
+  scale_color_manual(values = c(gg_color_hue(6)[2:3], gg_color_hue(6)[5:6])) + 
+  theme(legend.position =  "none")
+  
+direction/ x2_path + 
+  plot_layout(heights = c(1, 2), guides = "collect")
+
+```
+
+```{r index-val-id-animation}
+x2_animate %>% 
+  ggplot(aes(x = id, y = index_val, col = info))  + 
+  geom_point() + 
+  gganimate::transition_time(id) + 
+  gganimate::shadow_mark()
+
+ 
+x2_path_id <- x2_animate %>% 
+  ggplot(aes(x = id, y = index_val, col = info))  + 
+  geom_point()
+
+direction_id <- x2_animate %>% 
+  filter(tries > 5, info != "line_search") %>% 
+  ggplot(aes(x= id, y= index_val, col = info)) + 
+  geom_point() + 
+  xlim(1, max(x2_animate$id)) + 
+  scale_color_manual(values = c(gg_color_hue(6)[2:3], gg_color_hue(6)[5:6])) + 
+  theme(legend.position =  "none")
+  
+direction_id/ x2_path_id + 
+  plot_layout(heights = c(1, 2), guides = "collect")
+
+ 
+#gridExtra::grid.arrange(p1, p2, index_val_line, nrow = 2)
+```
+
+
 
 ## `search_better()`
 
