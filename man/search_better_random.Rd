@@ -4,7 +4,7 @@
 \alias{search_better_random}
 \title{Search for better projection, with stochastic component.}
 \usage{
-search_better_random(current, alpha = 0.5, index, max.tries = Inf,
+search_better_random(current, alpha = 0.5, index, max.tries = 125,
   method = "linear", eps = 0.001, cur_index = NA)
 }
 \description{

@@ -4,7 +4,7 @@
 \alias{search_better}
 \title{Search for a better projection near the current projection.}
 \usage{
-search_better(current, alpha = 0.5, index, max.tries = Inf,
+search_better(current, alpha = 0.5, index, max.tries = 125,
   method = "linear", cur_index = NA)
 }
 \description{
