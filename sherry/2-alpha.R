@@ -10,11 +10,15 @@ plan(multicore)
 
 # simulate data
 set.seed(1234)
-x1 <- rnorm(100, 0, 1)
-x2 <- c(rnorm(50, -1, 1), rnorm(50, 1, 1))
-x8 <- rnorm(100, 0, 1)
-x9 <- rnorm(100, 0, 1)
-x10 <- rnorm(100, 0, 1)
+x1 <- rnorm(1000, 0, 1)
+x2 <- c(rnorm(500, -5, 1), rnorm(500, 5, 1))
+x8 <- rnorm(1000, 0, 1)
+x9 <- rnorm(1000, 0, 1)
+x10 <- rnorm(1000, 0, 1)
+
+# animate_dist(data, tour_path = guided_tour(holes(), d = 1,
+#                                            search_f = search_better),
+#              polish =FALSE)
 
 # functions to use
 compute_better_alpha<- function(alpha, cooling){
