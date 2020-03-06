@@ -98,13 +98,24 @@ display_dist <- function(method="density", center = TRUE, half_range = NULL, rug
 #' @rdname display_dist
 #' @inheritParams animate
 #' @export
-animate_dist <- function(data, tour_path = grand_tour(1), ...) {
+animate_dist <- function(data, tour_path = grand_tour(1), polish = FALSE, ...) {
   #browser()
-  animate(
-    data = data, tour_path = tour_path,
-    display = display_dist(...),
-    ...
-  )
+
+  if (polish){
+    animate_polish(
+      data = data, tour_path = tour_path,
+      display = display_dist(...),
+      ...
+    )
+  }else{
+    animate(
+      data = data, tour_path = tour_path,
+      display = display_dist(...),
+      ...
+    )
+  }
+
 }
+
 
 
