@@ -3,13 +3,14 @@ library(tidyr)
 library(ggplot2)
 library(forcats)
 library(purrr)
+library(foreach)
 
 set.seed(1234)
-x1 <- rnorm(100, 0, 1)
-x2 <- c(rnorm(50, -1, 1), rnorm(50, 1, 1))
-x8 <- rnorm(100, 0, 1)
-x9 <- rnorm(100, 0, 1)
-x10 <- rnorm(100, 0, 1)
+x1 <- rnorm(1000, 0, 1)
+x2 <- c(rnorm(500, -3, 1), rnorm(500, 3, 1))
+x8 <- rnorm(1000, 0, 1)
+x9 <- rnorm(1000, 0, 1)
+x10 <- rnorm(1000, 0, 1)
 
 origin_dt <- tibble::tibble(x1 = x1, x2 = x2, x8 = x8,
                             x9 = x9,
@@ -17,19 +18,22 @@ origin_dt <- tibble::tibble(x1 = x1, x2 = x2, x8 = x8,
   gather(names, values) %>%
   mutate(names = as_factor(names),
          names = fct_relevel(names, levels = c("x1", "x2", "x8", "x9", "x10")))
-#save(origin_dt,file = "tour_optim_doc/origin_dt.rda")
 
 origin_dt %>%
   ggplot(aes(x = values)) +
-  geom_histogram(binwidth = 0.15) +
-  geom_density(aes(y=0.15 * ..count..)) +
+  geom_histogram(binwidth = 0.5) +
+  geom_density(aes(y=0.5 * ..count..)) +
   facet_wrap(vars(names), ncol = 3)
+
+#save(origin_dt,file = "sherry/data/origin_dt.rda")
+
+data <- cbind(x1, x2, x8, x9, x10)
+#save(origin_dt,file = "sherry/data/data.rda")
 
 ################################
 
-
 compute_global_object_geodesic <- function(var, names){
-  data <- cbind(x1, x8, x9, x10, var)
+  data <- cbind(x1,var, x8, x9, x10)
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
@@ -41,7 +45,7 @@ compute_global_object_geodesic <- function(var, names){
   return(result)
 }
 compute_global_object_better <- function(var, names){
-  data <- cbind(x1, x8, x9, x10, var)
+  data <- cbind(x1,var, x8, x9, x10)
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
@@ -53,7 +57,7 @@ compute_global_object_better <- function(var, names){
   return(result)
 }
 compute_global_object_better_random <- function(var, names){
-  data <- cbind(x1, x8, x9, x10, var)
+  data <- cbind(x1,var, x8, x9, x10)
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
@@ -86,37 +90,34 @@ compute_pca <- function(data, names){
 
 }
 
-
-
 ################################
+
+#simulation
+#search_geodesic
 set.seed(1234)
 x2_geodesic <- compute_global_object_geodesic(x2, "x2")
-#save(x2_geodesic, file = "tour_optim_doc/x2_geodesic.rda")
-
 x2_object <- x2_geodesic %>% compute_pca("x2") %>%
   mutate(info = fct_relevel(info, c("start", "direction_search",
                                     "best_direction_search", "line_search",
                                     "best_line_search")))
-#save(x2_object, file = "tour_optim_doc/x2_object.rda")
 
-
-################################
-
+# search_better
 set.seed(123456)
 x2_better <- compute_global_object_better(x2, "x2")
-#save(x2_better, file = "tour_optim_doc/x2_better.rda")
-
 x2_object_better <- x2_better %>% compute_pca("x2") %>%
   mutate(info = fct_relevel(info, c("start", "random_search", "new_basis")))
-#save(x2_object_better, file = "tour_optim_doc/x2_object_better.rda")
 
+# search_better_rando
+set.seed(123456)
+x2_better_random <- compute_global_object_better_random(x2, "x2")
+x2_object_better_random <- x2_better_random %>% compute_pca("x2") %>%
+  mutate(info = fct_relevel(info, c("start", "random_search", "new_basis")))
 
 ################################
 
-set.seed(123456)
-x2_better_random <- compute_global_object_better_random(x2, "x2")
-#save(x2_better_random, file = "tour_optim_doc/x2_better_random.rda")
-
-x2_object_better_random <- x2_better_random %>% compute_pca("x2") %>%
-  mutate(info = fct_relevel(info, c("start", "random_search", "new_basis")))
-#save(x2_object_better_random, file = "tour_optim_doc/x2_object_better_random.rda")
+save(x2_geodesic, file = "sherry/data/x2_geodesic.rda")
+save(x2_object, file = "sherry/data/x2_object.rda")
+save(x2_better, file = "sherry/data/x2_better.rda")
+save(x2_object_better, file = "sherry/data/x2_object_better.rda")
+save(x2_better_random, file = "sherry/data/x2_better_random.rda")
+save(x2_object_better_random, file = "sherry/data/x2_object_better_random.rda")
