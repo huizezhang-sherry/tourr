@@ -10,7 +10,7 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = FALSE, 
-                      message = FALSE,
+                      message = FALSE, 
                       cache = TRUE)
 library(tidyverse)
 library(magick)
@@ -40,8 +40,8 @@ load(here::here("sherry", "data", "origin_dt.rda"))
 
 origin_dt %>%
   ggplot(aes(x = values)) +
-  geom_histogram(binwidth = 0.15) +
-  geom_density(aes(y=0.15 * ..count..)) +
+  geom_histogram(binwidth = 0.5) +
+  geom_density(aes(y=0.5 * ..count..)) +
   facet_wrap(vars(names), ncol = 3)
 ```
 
@@ -176,7 +176,7 @@ x2_path <- x2_animate %>%
   #                                               "best_direction_search")))
    #ylim = c(0.7866, 0.7875)
 direction <- x2_animate %>% 
-  filter(tries > 5, info != "line_search") %>% 
+  filter(index_val > 0.930, info != "line_search") %>% 
   ggplot(aes(x= animate_id, y= index_val, col = info)) + 
   geom_point() + 
   xlim(1, max(x2_animate$animate_id)) + 
@@ -201,7 +201,7 @@ x2_path_id <- x2_animate %>%
   geom_point()
 
 direction_id <- x2_animate %>% 
-  filter(tries > 5, info != "line_search") %>% 
+  filter(tries > 7, info != "line_search") %>% 
   ggplot(aes(x= id, y= index_val, col = info)) + 
   geom_point() + 
   xlim(1, max(x2_animate$id)) + 

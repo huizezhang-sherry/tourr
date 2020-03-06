@@ -46,77 +46,9 @@ geodesic_interp %>%
 
 Adding the polish step doesn't find a better basis for all the step_polish value and all the alpha value. This makes me want to understand more on how the ending interpolation bases locate for different alpha value. 
 
-I then simulate for a wider range of stepS value `stepS <- c(0.01, 0.02, 0.05, 0.07, 0.09,  seq(0.1, 0.9, 0.1))`
-
-```{r}
-geodesic_clean <- geodesic_alpha2 %>%
-  filter(info == "interpolation") %>%
-  mutate(stepS = as.factor(stepS))
-
-best <- geodesic_clean %>%
-  group_by(stepS) %>%
-  mutate(id = row_number()) %>%
-  filter(index_val == max(index_val))
-
-nondup <- best %>%
-  ungroup() %>%
-  mutate(dup = duplicated(round(index_val, 4))) %>%
-  filter(dup == FALSE)
-
-geodesic_interp <- geodesic_clean %>%
-   filter(stepS %in% nondup$stepS) %>% 
-  group_by(stepS) %>%
-  mutate(id = row_number())
-
-geodesic_interp %>% 
-  ggplot(aes(x = id, y = index_val, col = stepS)) +
-  geom_path() +
-  ggrepel::geom_text_repel(data = nondup, 
-                           aes(label = round(index_val, 4)))
-```
-
-```{r compute-pca-function}
-
-compute_pca <- function(data){
-
-  pca <- foreach::foreach(i  = 1:nrow(data), .combine = "rbind") %do%{
-    t(data$basis[[i]])
-  }
-
-  loadings <- stats::predict(stats::prcomp(pca))[,1:2]
-  pca2 <- cbind(pca, loadings)
-
-  result <- as_tibble(pca2) %>% mutate(id = 1: nrow(pca2),
-                                       info = data$info,
-                                       tries = data$tries,
-                                       index_val = data$index_val,
-                                       stepS = data$stepS)
-
-  colnames(result)[1:5] <- c("x1", "x8", "x9", "x10", "x2")
-
-  return(result)
-
-}
-```
 
 
-```{r}
-pca2 <- geodesic_alpha2 %>% compute_pca() %>%
-  filter(info %in% c("start", "interpolation"),
-         stepS %in% nondup$stepS)
 
-pca2 %>%
-  ggplot(aes(x= PC1, y = PC2, col = as.factor(stepS))) +
-  geom_point() +
-  geom_point(data = filter(pca2, info == "start"), col = "red") +
-  theme(aspect.ratio = 1) +
-  facet_wrap(vars(stepS))
-
-```
-
-- The PCA visualisation tells us that though starting from the same place, different `stepS` leads to totally different path and ending points in the space. 
-
-- A `search_polish()` process after the tour is not helpful because it can't search the whole space!
 
 
 
