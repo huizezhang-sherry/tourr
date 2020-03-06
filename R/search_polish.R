@@ -6,16 +6,12 @@
 #' @param max.tries maximum number of basis to search
 #' @param method linear or geodesic nearby basis
 #' @keywords optimize
-search_polish <- function(current, alpha_polish = 0.01, index, max_tries = 500,
+search_polish <- function(current, alpha_polish = 0.1, index, data, max_tries = 5000,
                           method = "linear"){
   method <- match.arg(method, c("linear", "geodesic"))
   if (is.na(cur_index)) cur_index <- index(current)
   new_basis <- list()
   new_index <- c()
-
-  index <<- function(proj) {
-    index_f(as.matrix(data) %*% proj)
-  }
 
   for(i in 1:max_tries){
     new_basis[[i]] <- basis_nearby(current, alpha_polish, method)
@@ -25,6 +21,11 @@ search_polish <- function(current, alpha_polish = 0.01, index, max_tries = 500,
   }
 
   sample <- tibble::tibble(basis = new_basis, index_val = new_index)
-  sample[which.max(sample$index_val),]$basis[[1]]
+
+  if (new_index > cur_index){
+    return(sample[which.max(sample$index_val),]$basis[[1]])
+  }else{
+    return(current)
+  }
 
 }
