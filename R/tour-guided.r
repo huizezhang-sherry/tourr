@@ -53,10 +53,10 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
 
     if (is.null(current)) {
 
-      current <- basis_init(ncol(data), d)
+      current <- basis_random(ncol(data), d)
       cur_index <<- index(current)
 
-      record <<- tibble(basis = list(basis_init(ncol(data), d))) %>%
+      record <<- tibble(basis = list(current)) %>%
         mutate(index_val = map_dbl(basis, index),
                tries = 1,
                info = "start")
