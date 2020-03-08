@@ -9,17 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, 
                       message = FALSE, 
                       warning = FALSE)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(forcats)
-library(purrr)
+library(tidyverse)
 library(foreach)
 
 load(here::here("sherry", "data", "better_alpha.rda"))
 load(here::here("sherry", "data", "better_random_alpha.rda"))
 load(here::here("sherry", "data", "geodesic_alpha.rda"))
 load(here::here("sherry", "data", "geodesic_alpha2.rda"))
+source(here::here("sherry", "compute_pca.R"))
 ```
 
 Key points: 
@@ -246,33 +243,11 @@ bind_rows(random_max_index_val,max_index_val) %>%
 
 - `search_geodesic()` doesn't seem to have the hill-and-valley pattern in the searching path. 
 
-- An default value of 0.01 is small too small for `stepS`. An initial value around 0.5 would be a better alternative.
+- Different stepS attains pretty similar ending `index_val`, depending on precision. (some paths are exactly the same, the plot below only show the distinct path).  
 
+- The different of using different stepS affects the effectiveness of the directional search. As stepS becomes larger, the "radius" of the searching becomes larger and the directional search is no longer a infinitesimal search (see the pca plot).  An ideal stepS between 0.01 to 0.1 is recommended.
 
-```{r geodesic-hill-climbing}
-geodesic_clean <- geodesic_alpha2 %>%
-  filter(info == "interpolation") %>%
-  mutate(stepS = as.factor(stepS)) 
-
-geodesic_interp <- geodesic_clean %>% 
-  group_by(stepS) %>% 
-  mutate(id = row_number())
-  
-best <- geodesic_clean %>% 
-  group_by(stepS) %>% 
-  mutate(id = row_number()) %>% 
-  filter(index_val == max(index_val))
-
-geodesic_interp %>%
-  ggplot(aes(x = id, y = index_val, col = stepS)) +
-  geom_path() + 
-  ggrepel::geom_text_repel(data = best, aes(label = round(index_val, 4)))
-```
-
-Some of the series are exactly the same, the plot below filter the unique path. 
-
-
-```{r}
+```{r compare-stepS-index}
 geodesic_clean <- geodesic_alpha2 %>%
   filter(info == "interpolation") %>%
   mutate(stepS = as.factor(stepS))
@@ -299,36 +274,9 @@ geodesic_interp %>%
                            aes(label = round(index_val, 4)))
 ```
 
-
-#### **PCA visualisation of the searching path**
-
-- The PCA visualisation tells us that though starting from the same place, different `stepS` leads to minor different paths and ending points but the ending `index_val` is very similar
-
-
-```{r compute-pca-function}
-
-compute_pca <- function(data){
-
-  pca <- foreach::foreach(i  = 1:nrow(data), .combine = "rbind") %do%{
-    t(data$basis[[i]])
-  }
-
-  loadings <- stats::predict(stats::prcomp(pca))[,1:2]
-  pca2 <- cbind(pca, loadings)
-
-  result <- as_tibble(pca2) %>% mutate(id = 1: nrow(pca2),
-                                       info = data$info,
-                                       tries = data$tries,
-                                       index_val = data$index_val,
-                                       stepS = data$stepS)
-
-  colnames(result)[1:5] <- c("x1", "x8", "x9", "x10", "x2")
-
-  return(result)
-
-}
-
-pca2 <- geodesic_alpha2 %>% compute_pca() %>%
+```{r compare-stepS-pca}
+pca2 <- geodesic_alpha2 %>% 
+  pca_geodesic() %>%
   filter(info %in% c("start", "interpolation"))
 
 pca2 %>%
@@ -340,57 +288,40 @@ pca2 %>%
 
 ```
 
-##### **index value plot for different stepS**
-
-[this is interesting! investigate on directional search become less effective when stepS goes large]
-
-```{r}
+```{r direction-search-index}
 geodesic_alpha2 %>% 
   group_by(stepS) %>% 
   mutate(id = row_number()) %>% 
   ggplot(aes(x = id, y = index_val, col = info)) + 
   geom_point() + 
   facet_wrap(vars(stepS))
+```
 
+```{r direction-search-pca}
+x2_object <- geodesic_alpha2 %>% 
+  group_by(stepS) %>% 
+  pca_geodesic() 
+
+x2_releveled <- x2_object %>% filter(info != "interpolation")
+
+x2_object %>%
+  ggplot(aes(x= PC1, y = PC2, col = info)) +
+  geom_point() +
+  geom_point(data = x2_releveled) +
+  theme(aspect.ratio = 1) + 
+  facet_wrap(vars(stepS))
 ```
 
 
 
-[TODO: chunck this into above]
+
 some other stuff
-
-
-```{r}
-compute_pca <- function(data){
-
-  pca <- foreach::foreach(i  = 1:nrow(data), .combine = "rbind") %do%{
-    t(data$basis[[i]])
-  }
-
-  loadings <- stats::predict(stats::prcomp(pca))[,1:2]
-  pca2 <- cbind(pca, loadings)
-
-  result <- as_tibble(pca2) %>% mutate(id = 1: nrow(pca2),
-                                       info = data$info,
-                                       tries = data$tries,
-                                       index_val = data$index_val, 
-                                       alpha = data$alpha, 
-                                       cooling = data$cooling)
-
-  colnames(result)[1:5] <- c("x1", "x8", "x9", "x10", "x2")
-
-  return(result)
-
-}
-```
-
+[TODO: chunck this into above]
 
 ```{r better-random-pca}
-pca_better_random <- better_random_alpha %>%
-  compute_pca()
-
-pca_plot_br <- pca_better_random %>% filter(info %in% c("start",
-                                       "interpolation"))
+pca_plot_br <- better_random_alpha %>%
+  pca_better() %>% 
+  filter(info %in% c("start","interpolation"))
 
 pca_plot_br %>%
   ggplot(aes(x= PC1, y = PC2, col = info)) +
