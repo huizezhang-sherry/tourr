@@ -28,7 +28,7 @@ origin_dt %>%
 #save(origin_dt,file = "sherry/data/origin_dt.rda")
 
 data <- cbind(x1, x2, x8, x9, x10)
-#save(origin_dt,file = "sherry/data/data.rda")
+#save(data,file = "sherry/data/data.rda")
 
 ################################
 
