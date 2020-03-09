@@ -15,6 +15,11 @@ knitr::opts_chunk$set(echo = TRUE,
 library(tidyverse)
 library(magick)
 library(patchwork)
+load(here::here("sherry", "data", "origin_dt.rda"))
+load(here::here("sherry", "data", "x2_geodesic.rda"))
+load(here::here("sherry", "data", "x2_object.rda"))
+load(here::here("sherry", "data", "x2_object_better.rda"))
+load(here::here("sherry", "data", "x2_object_better_random.rda"))
 ```
 
 # Tourr: overview
@@ -36,8 +41,6 @@ To understand the searching path of the basis in the optimisation, a global obje
 Here I present a demonstration of how to use the modified version of tourr package and principle component analysis to understand the optimisation searching path. Simulated data is generated using 4 random variables (`x1, x8, x9, x10`) and a bi-modal distribution (`x2`). The histogram of the five variables are presented below. 
 
 ```{r}
-load(here::here("sherry", "data", "origin_dt.rda"))
-
 origin_dt %>%
   ggplot(aes(x = values)) +
   geom_histogram(binwidth = 0.5) +
@@ -51,7 +54,6 @@ origin_dt %>%
 Using the `search_geodesic()` optimiser, the first five rows of the global object generated from the tour is shown below.
 
 ```{r}
-load(here::here("sherry", "data", "x2_geodesic.rda"))
 head(x2_geodesic)
 ```
 
@@ -64,8 +66,6 @@ Visualisation tools could help to visually inspect the bases from the tour. Usin
 
 
 ```{r}
-load(here::here("sherry", "data", "x2_object.rda"))
-
 x2_object <- x2_object %>% 
   mutate(info2 = ifelse(info %in% c("best_line_search",
                                      "best_direction_search"), 
@@ -84,16 +84,10 @@ x2_object %>%
   geom_point() +
   geom_point(data = x2_releveled) +
   theme(aspect.ratio = 1)
-
-
-# x2_object %>% 
-#   ggplot(aes(x= PC1, y = PC2, col = info)) +
-#   geom_point() +
-#   theme(aspect.ratio = 1) 
 ```
 
 
-```{r eval = FALSE}
+```{r}
 # colour the interpolation from all the bases
 x2_interpolate <- x2_object %>% 
   filter(info == "interpolation") %>% 
@@ -106,8 +100,6 @@ ggplot(data =x2_interpolate,
        aes(x= PC1, y = PC2)) +
   geom_point(aes(col = info4)) +
   geom_path(linetype = "dashed")
-
-
 ```
 
 ```{r geo-animate}
@@ -127,14 +119,6 @@ geo_animate <- x2_animate %>%
 
 p1 <- gganimate::animate(geo_animate, fps = 2)
 
-```
-
-```{r}
-p1
-```
-
-
-```{r index-val-animate}
 index_val_animate <- x2_animate %>% 
   ggplot(aes(x= animate_id, y= index_val, col = info)) + 
   geom_jitter(width = 0.0005) + 
@@ -142,11 +126,7 @@ index_val_animate <- x2_animate %>%
   gganimate::transition_time(animate_id) + 
   gganimate::shadow_mark()
 
-
 p2 <- gganimate::animate(index_val_animate, fps = 2)
-```
-
-```{r combine}
 
 a_mgif <- image_read(p1)
 b_mgif <- image_read(p2)
@@ -162,7 +142,6 @@ new_gif
 ```
 
 ```{r}
-
 gg_color_hue <- function(n) {
   hues = seq(15, 375, length = n + 1)
   hcl(h = hues, l = 65, c = 100)[1:n]
@@ -188,7 +167,7 @@ direction/ x2_path +
 
 ```
 
-```{r index-val-id-animation}
+```{r index-val-id-animation, eval = FALSE}
 x2_animate %>% 
   ggplot(aes(x = id, y = index_val, col = info))  + 
   geom_point() + 
@@ -220,8 +199,6 @@ direction_id/ x2_path_id +
 ## `search_better()`
 
 ```{r better-path}
-load(here::here("sherry", "data", "x2_object_better.rda"))
-
 # colour by parts of optimisation (static)
 x2_better_releveled <- x2_object_better %>%
   filter(info != "interpolation") 
@@ -257,7 +234,7 @@ x2_better_animate %>%
 ## `search_better_random()`
 
 ```{r better-random-path}
-load(here::here("sherry", "data", "x2_object_better_random.rda"))
+
 
 # colour by parts of optimisation (static)
 x2_better_random_releveled <- x2_object_better_random %>%

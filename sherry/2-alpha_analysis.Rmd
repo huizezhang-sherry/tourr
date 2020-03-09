@@ -84,7 +84,7 @@ Potential solution:
 - Stop the interpolating process if the index_val is keep decreasing for five interpolating basis. 
 
 ```{r default-paras}
-trial <- better_alpha_new %>% filter(alpha == 0.5, cooling == 0.99)
+trial <- better_alpha %>% filter(alpha == 0.5, cooling == 0.99)
 
 temp <- trial %>% filter(info %in% c("new_basis","interpolation", "start"))
   
@@ -309,23 +309,3 @@ x2_object %>%
   theme(aspect.ratio = 1) + 
   facet_wrap(vars(stepS))
 ```
-
-
-
-
-some other stuff
-[TODO: chunck this into above]
-
-```{r better-random-pca}
-pca_plot_br <- better_random_alpha %>%
-  pca_better() %>% 
-  filter(info %in% c("start","interpolation"))
-
-pca_plot_br %>%
-  ggplot(aes(x= PC1, y = PC2, col = info)) +
-  geom_point() +
-  geom_point(data = filter(pca_plot_br, info == "start")) +
-  theme(aspect.ratio = 1) +
-  facet_grid(alpha ~cooling)
-```
-
