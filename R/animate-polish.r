@@ -115,42 +115,45 @@ animate_polish <- function(data, tour_path = grand_tour(), display = display_xy(
   }
 
 
-  if(polish){
-    cat("start polishing \n")
-    current_best <- record %>% filter(info == "interpolation") %>% tail(1)
-    current <- current_best$basis[[1]]
+  cat("start polishing \n")
+  current_best <-
+    record %>% filter(info == "interpolation") %>% tail(1)
+  current <- current_best$basis[[1]]
 
-    target <- search_polish(current, alpha_polish = 0.01 ,holes(), data)
-    #dist <- proj_dist(current, target)
-    geodesic <- geodesic_path(current, target)
+  target <-
+    search_polish(current, alpha_polish = 0.01 , holes(), data)
+  #dist <- proj_dist(current, target)
+  geodesic <- geodesic_path(current, target)
 
-    cur_dist <- 0
-    target_dist <- geodesic$dist
-    step_polish <- 0
-    step_max <- 10
-    step_size_polish <- target_dist/step_max
-    interp_basis <<- geodesic$interpolate(1.)
+  cur_dist <- 0
+  target_dist <- geodesic$dist
+  step_polish <- 0
+  step_max <- 10
+  step_size_polish <- target_dist / step_max
+  interp_basis <<- geodesic$interpolate(1.)
 
-    # index <- function(proj) {
-    #   index_f(as.matrix(data) %*% proj)
-    # }
+  # index <- function(proj) {
+  #   index_f(as.matrix(data) %*% proj)
+  # }
 
-    while (step_polish <= step_max){
-      cat("target_dist - cur_dist:",target_dist - cur_dist,  "\n")
-      step_polish <- step_polish + 1
-      cur_dist <- cur_dist + step_size_polish
+  while (step_polish <= step_max) {
+    cat("target_dist - cur_dist:", target_dist - cur_dist,  "\n")
+    step_polish <- step_polish + 1
+    cur_dist <- cur_dist + step_size_polish
 
-      interp_basis <<- geodesic$interpolate(cur_dist / target_dist)
+    interp_basis <<- geodesic$interpolate(cur_dist / target_dist)
 
-      temp <- tibble(basis = list(interp_basis),
-                     index_val = calc_index(data, interp_basis),
-                     info = "interpolation_polish")
+    temp <- tibble(
+      basis = list(interp_basis),
+      index_val = calc_index(data, interp_basis),
+      info = "interpolation_polish"
+    )
 
-      record <<- record %>% bind_rows(temp)
-
-    }
+    record <<- record %>% bind_rows(temp)
 
   }
+
+
 
   return(record)
 }
