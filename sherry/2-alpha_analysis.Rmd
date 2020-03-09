@@ -84,26 +84,24 @@ Potential solution:
 - Stop the interpolating process if the index_val is keep decreasing for five interpolating basis. 
 
 ```{r default-paras}
-temp <- better_alpha %>% 
-  filter(info %in% c("new_basis","interpolation", "start"), 
-         alpha == 0.5, cooling == 0.99) %>% 
-  mutate(id = row_number()) %>% 
+trial <- better_alpha_new %>% filter(alpha == 0.5, cooling == 0.99)
+
+temp <- trial %>% filter(info %in% c("new_basis","interpolation", "start"))
+  
+start <- temp %>% filter(info == "start") %>% mutate(id =1)
+
+interp <- temp %>% 
+  filter(info == "interpolation") %>% 
+  mutate(id = row_number() + 1)
+
+new_id <- interp %>% 
   group_by(tries) %>% 
-  nest()
+  filter(row_number() == max(row_number())) %>% 
+  pull(id)
 
-amend_id <- function(data){
-  data %>%  
-    mutate(id = ifelse(info == "interpolation", id, 
-                       ifelse(info == "start", id, id + nrow(data) - 1)))
-}
+new <- temp %>% filter(info == "new_basis") %>% mutate(id = new_id)
 
-dt <- map_df(temp$data,amend_id)  %>% 
-  mutate(info = ifelse(info == "interpolation", info, "search")) %>%
-  mutate(id = case_when(id == 1 ~ id, 
-                        between(id, 2, 20) ~ id - 2, 
-                        between(id, 21, 43) ~ id - 3, 
-                        between(id, 45, 53) ~ id - 4), 
-         id = ifelse(info == "search" & id == 18,  id -1, id)) 
+dt <- bind_rows(start, interp, new) %>% arrange(id)
 
 dt %>% 
   ggplot(aes(x = id, y = index_val, col = info)) + 
@@ -119,7 +117,7 @@ The blue points are the target bases found in the search and the red path is the
 Facet by alpha allows for seeing the effect of different cooling value under the same alpha. A larger alpha value makes the searching / interpolating path longer but it doesnt not translate into larger index_val. Also, the larger the alpha, the more fluctuate the searching path. The plot for  using `search_better_random()` shows the same information. 
 
 ```{r hill-climbing - cooling}
-better_interp <- better_alpha %>%
+better_interp <- better_alpha %>% 
   filter(info == "interpolation") %>%
   group_by(alpha, cooling) %>%
   mutate(id = row_number()) %>% 
