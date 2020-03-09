@@ -6,9 +6,9 @@ plan(multicore)
 
 
 load(here::here("sherry", "data", "data.rda"))
-a <- tourr::animate_dist(data, tour_path = guided_tour(holes(), d = 1,
-                                                       search_f = search_geodesic_latest),
-                         polish = TRUE)
+a <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
+                                                search_f = search_geodesic_latest),
+                  polish = TRUE)
 
 
 compute_geodesic_alpha <- function(stepS, polish_alpha){
@@ -16,8 +16,9 @@ compute_geodesic_alpha <- function(stepS, polish_alpha){
   animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,stepS = stepS,
                                        search_f = search_geodesic_latest),
-                         polish_alpha = polish_alpha,
-                         sphere = TRUE, polish = TRUE) %>%
+               polish = TRUE,
+               polish_alpha = polish_alpha,
+               sphere = TRUE) %>%
     mutate(stepS = stepS, polish_alpha = polish_alpha) %>%
     mutate(method = "geodesic")
 

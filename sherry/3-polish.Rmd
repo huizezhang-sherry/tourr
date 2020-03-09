@@ -8,10 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library(foreach)
-library(doFuture)
-registerDoFuture()
-plan(multicore)
+
 load(here::here("sherry", "data", "geodesic_polished.rda"))
 load(here::here("sherry", "data", "geodesic_alpha2.rda"))
 ```
