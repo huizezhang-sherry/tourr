@@ -35,6 +35,7 @@ new_tour <- function(data, tour_path, start = NULL) {
   cur_dist <- 0
   target_dist <- 0
   geodesic <- NULL
+  temp_record <- tibble::tibble()
 
   function(step_size) {
     #browser()
@@ -52,6 +53,19 @@ new_tour <- function(data, tour_path, start = NULL) {
     }
 
     if (cur_dist >= target_dist) {
+
+      if(tries !=0 ){
+        row <- record %>%
+          filter(tries == tries, info == "interpolation") %>%
+          filter(index_val == max(index_val))
+        proj <- row$basis[[1]]
+        max_val <- row$index_val
+        max_id <- which(record$index_val == max_val)
+        record <<- record %>%
+          mutate(id = row_number()) %>%
+          filter(id <=max_id)
+      }
+
       tour_path_obj <<- tour_path(proj, data)
       geodesic <<- tour_path_obj[["geo"]]
 
@@ -83,11 +97,22 @@ new_tour <- function(data, tour_path, start = NULL) {
                    info = "interpolation",
                    tries = tries)
 
+    # cur_index <- record %>% filter(row_number() == max(row_number())) %>%
+    #   dplyr::select(index_val)
+
+    # temp_record <- temp_record %>% bind_rows(temp_one)
+    #
+    # temp_record_interrupt <<- temp_record %>%
+    #   filter(row_number() <= which.max(index_val))
+
+    # if((temp$index_val < cur_index) | temp$index_val > last(record$index_val)){
+    #   record <<- record %>% bind_rows(temp)
+    #
+    # }
+
     record <<- record %>% bind_rows(temp)
 
-
     list(proj = proj, target = target, step = step, record = record)
-
 
   }
 
