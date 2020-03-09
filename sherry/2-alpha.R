@@ -83,6 +83,16 @@ geodesic_alpha2 <- foreach(i = 1:length(stepS2), .combine = "rbind") %do%{
   compute_geodesic_alpha(stepS[i])
 }
 
+better_alpha_new <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
+  set.seed(123456)
+  compute_better_alpha(paras$Var1[i], paras$Var2[i])
+}
+
+better_random_alpha_new <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
+  set.seed(123456)
+  compute_random_alpha(paras$Var1[i], paras$Var2[i])
+}
+
 ################################
 # clean the info
 
@@ -110,3 +120,6 @@ geodesic_alpha2 <- geodesic_alpha2 %>% clean_info()
 # save(better_random_alpha, file = "sherry/data/better_random_alpha.rda")
 # save(geodesic_alpha, file = "sherry/data/geodesic_alpha.rda")
 # save(geodesic_alpha2, file = "sherry/data/geodesic_alpha2.rda")
+# save(better_alpha_new, file = "sherry/data/better_alpha_new.rda")
+# save(better_random_alpha_new, file = "sherry/data/better_random_alpha_new.rda")
+
