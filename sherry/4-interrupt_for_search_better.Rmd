@@ -1,0 +1,219 @@
+---
+title: "4.interrupt for search_better"
+author: "Huize Zhang"
+date: "08/03/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+library(tidyverse)
+library(foreach)
+library(patchwork)
+
+load(here::here("sherry", "data", "better_alpha_new.rda"))
+load(here::here("sherry", "data", "better_alpha.rda"))
+load(here::here("sherry", "data", "better_random_alpha.rda"))
+load(here::here("sherry", "data", "better_random_alpha_new.rda"))
+source(here::here("sherry", "compute_pca.R"))
+```
+
+```{r default-paras}
+sample <- bind_rows(better_alpha_new, better_alpha) %>% 
+  mutate(type = c(rep("with interruption", nrow(better_alpha_new)),
+                  rep("without interruption", nrow(better_alpha)))) %>% 
+  filter(alpha == 0.5, cooling == 0.99) 
+
+interp <- sample %>% filter(info == "interpolation")%>% 
+  group_by(type) %>% 
+  mutate(id = row_number()) 
+
+interp %>% 
+  ggplot(aes(x = id, y = index_val, col = type)) + 
+  geom_point() + 
+  geom_line()
+```
+
+```{r}
+temp <- sample %>% pca_better() %>% 
+  mutate(type= as.factor(cumsum(ifelse(info == "start", 1,0))),
+         type = ifelse(type == 1, "with interrupt", "without interrupt")) 
+
+temp %>%
+  ggplot(aes(x= PC1, y = PC2, col = info)) +
+  geom_point() +
+  geom_point(data = filter(temp, info == "start")) +
+  theme(aspect.ratio = 1) +
+  facet_wrap(vars(type))
+```
+
+
+
+```{r hill-climbing - cooling}
+better_interp_new <- better_alpha_new %>% 
+  filter(info == "interpolation") %>%
+  group_by(alpha, cooling) %>%
+  mutate(id = row_number()) %>% 
+  ungroup() %>% 
+  mutate(alpha = as.factor(alpha), 
+         cooling = as.factor(cooling))
+
+random_interp_new <- better_random_alpha_new %>%
+  filter(info == "interpolation") %>%
+  group_by(alpha, cooling) %>%
+  mutate(id = row_number()) %>% 
+  ungroup() %>% 
+  mutate(alpha = as.factor(alpha), 
+         cooling = as.factor(cooling))
+
+better_interp_new %>%
+  ggplot(aes(x = id, y = index_val, col = cooling)) +
+  geom_line() +
+  facet_wrap(vars(alpha)) + 
+  ggtitle("search_better - different cooling values for the same alpha")
+```
+
+```{r eval = FALSE}
+random_interp_new %>%
+  ggplot(aes(x = id, y = index_val, col = cooling)) +
+  geom_line() +
+  facet_wrap(vars(alpha)) + 
+  ggtitle("search_better_random - different cooling values for the same alpha")
+
+```
+
+
+#### **alpha parameter**
+
+Plot the index_val along the interpolation path for different combination of alpha and cooling parameter. For all cooling parameters, the alpha = 0.5 path shows the heavy fluctuation in the interpolating path. It seems that an alpha value of 0.2 or 0.3 are more likely to attain a higher index_val. The plot for  using `search_better_random()` shows the same information. 
+
+```{r better-hill-climbing}
+better_interp_new %>%
+  ggplot(aes(x = id, y = index_val, col = alpha)) +
+  geom_line() +
+  facet_wrap(vars(cooling)) + 
+  ggtitle("search_better - different alpha values for the same cooling")
+```
+
+
+```{r better-random-hill-climbing, eval = FALSE}
+random_interp_new %>%
+  ggplot(aes(x = id, y = index_val, col = alpha)) +
+  geom_line() +
+  facet_wrap(vars(cooling)) + 
+  ggtitle("search_better_random - different alpha values for the same cooling")
+```
+
+
+#### **ending index_val**
+
+```{r better-index-val}
+max_index_val <- better_alpha_new %>%
+  filter(info == "new_basis") %>%
+  group_by(alpha, cooling) %>%
+  filter(index_val == max(index_val)) %>%
+  ungroup() %>%
+  mutate(alpha = as.factor(alpha),
+         cooling = as.factor(cooling))
+
+best_better <- max_index_val %>% filter(index_val == max(index_val))
+
+max_index_val %>%
+  ggplot(aes(x = alpha, y = cooling)) +
+  geom_raster(aes(fill = index_val)) +
+  geom_tile(data = best_better, size = 2, fill = NA, col = "red") +
+  geom_text(aes(label = round(index_val, 4)), col = "white")
+```
+
+The tile plot shows the end index_val returned for different combination of the grid value. It suggested that a lower alpha value of 0.2 or 0.3 and a lower cooling parameter from 0.8 to 0.9 are likely to result in higher ending index_val. `search_better_random()` shows the same. 
+
+```{r better-random-index-val}
+random_max_index_val <- better_random_alpha_new %>%
+  filter(info == "new_basis") %>%
+  group_by(alpha, cooling) %>%
+  filter(index_val == max(index_val)) %>%
+  ungroup() %>%
+  mutate(alpha = as.factor(alpha),
+         cooling = as.factor(cooling))
+
+best_random <- random_max_index_val %>% filter(index_val == max(index_val))
+
+random_max_index_val %>%
+  ggplot(aes(x = alpha, y = cooling)) +
+  geom_raster(aes(fill = index_val)) +
+  geom_tile(data = best_random, size = 2, fill = NA, col = "red") +
+  geom_text(aes(label = round(index_val, 4)), col = "white")
+```
+
+### **2. Comparison between `search_better()` and `search_better_random()`**
+
+- For a small alpha value, 0.1, the trigger of random step in `search_better_random` doesn't result in a larger ending index_val. 
+
+- For combination of large cooling and alpha value, `search_better_random` is doing the same as `search_better`. This is because when the searching neighbourhood becomes large, the searching algorithm is likely to find a much better index_val that result in a large difference in `new_index-cur_index`. 
+
+- We could also play around with different eps value to see if things would change if eps is larger.
+
+```{r}
+bind_rows(random_max_index_val,max_index_val) %>% 
+  ggplot(aes(x = cooling , y = index_val, col = method)) + 
+  geom_point() + 
+  facet_wrap(vars(alpha))
+```
+
+```{r eval = FALSE}
+bind_rows(random_max_index_val,max_index_val) %>% 
+  ggplot(aes(x = alpha , y = index_val, col = method)) + 
+  geom_point() + 
+  facet_wrap(vars(cooling))
+```
+
+```{r}
+index <- bind_rows(better_alpha_new, better_alpha) %>% 
+  mutate(type = c(rep("with interrupt", nrow(better_alpha_new)),
+                  rep("without interrupt", nrow(better_alpha)))) %>% 
+  filter(cooling %in% c(0.95, 0.99, 0.995), 
+         alpha ==0.5, info == "interpolation") %>% 
+  group_by(cooling, type) %>% 
+  mutate(id = row_number()) %>% 
+  ungroup() %>% 
+  mutate(cooling = as.factor(cooling))
+
+index %>%
+  ggplot(aes(x = id, y = index_val, col = type, group = type)) +
+  geom_line() +
+  facet_wrap(vars(cooling),nrow = 3)
+
+
+```
+
+```{r better-pca}
+temp <-bind_rows(better_alpha_new, better_alpha) %>% 
+  mutate(type = c(rep("with interrupt", nrow(better_alpha_new)),
+                  rep("without interrupt", nrow(better_alpha)))) %>% 
+  filter(cooling %in% c(0.95, 0.99, 0.995), alpha ==0.5) %>% 
+  mutate(val_lag = lag(index_val), 
+         info_lag = lag(info),
+         compare = case_when(tries <= 2 ~ "not relevant",
+           type == "with interrupt" ~ "interrupt",
+                             info != "interpolation" ~ "other", 
+                             index_val > val_lag ~ "increase", 
+                             index_val < val_lag ~ "decrease",
+                             info_lag == "new_basis" ~ "other"
+                             )) %>% 
+  group_by(cooling) %>% 
+  mutate(dup = duplicated(index_val), 
+         compare = ifelse(dup & compare == "decrease", 
+                          "common", compare)) %>% 
+  pca_better_interrupt() 
+
+temp %>% 
+  ggplot(aes(x= PC1, y = PC2)) +
+  geom_point(aes(col = info)) +
+  geom_point(data = filter(temp, info == "start"), aes(col = info)) +
+  geom_point(data = filter(temp, info == "new_basis"), aes(col = info)) +
+  geom_point(data = filter(temp, compare == "decrease"), col = "blue") + 
+  theme(aspect.ratio = 1) +
+  facet_grid(type ~cooling)
+
+```
+
