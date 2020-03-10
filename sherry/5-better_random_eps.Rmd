@@ -1,0 +1,81 @@
+---
+title: "5-better_random_eps"
+author: "Huize Zhang"
+date: "10/03/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(foreach)
+load(here::here("sherry", "data", "better_alpha.rda"))
+load(here::here("sherry", "data", "better_random_eps.rda"))
+source(here::here("sherry", "compute_pca.R"))
+
+
+better_alpha0.5 <- better_alpha %>% 
+  filter(alpha == 0.5, cooling %in%  c(0.95, 0.99, 0.995))
+```
+
+```{r}
+max_index_val <- better_alpha0.5 %>%
+  filter(info == "new_basis") %>%
+  group_by(alpha, cooling) %>%
+  filter(index_val == max(index_val)) %>%
+  ungroup() %>%
+  mutate(alpha = as.factor(alpha),
+         cooling = as.factor(cooling))
+
+random_max_index_val <- better_random_eps %>%
+  filter(info == "new_basis") %>%
+  group_by(alpha, cooling) %>%
+  filter(index_val == max(index_val)) %>%
+  ungroup() %>%
+  mutate(alpha = as.factor(alpha),
+         cooling = as.factor(cooling))
+
+bind_rows(max_index_val, random_max_index_val) %>%
+  ggplot(aes(x = cooling , y = index_val, col = as.factor(eps))) + 
+  geom_jitter(height = 0) + 
+  facet_wrap(vars(cooling))
+
+```
+
+
+```{r}
+better_interp <- better_alpha0.5 %>% 
+  filter(info == "interpolation") %>%
+  group_by(alpha, cooling) %>%
+  mutate(id = row_number()) %>% 
+  ungroup() %>% 
+  mutate(cooling = as.factor(cooling))
+
+eps_interp <- better_random_eps %>% 
+  filter(info == "interpolation") %>%
+  group_by(cooling, eps) %>%
+  mutate(id = row_number()) %>% 
+  ungroup() %>% 
+  mutate(eps = as.factor(eps), 
+         cooling = as.factor(cooling))
+
+dt <- bind_rows(better_interp, eps_interp) 
+
+dt %>% 
+  ggplot(aes(x = id, y = index_val, col = eps)) +
+  geom_line() +
+  facet_grid(cooling ~ eps)
+```
+
+```{r}
+pca2 <- dt %>% pca_better_eps() %>%
+  filter(info %in% c("start", "interpolation"))
+
+pca2 %>%
+  ggplot(aes(x= PC1, y = PC2, col = as.factor(eps))) +
+  geom_point() +
+  geom_point(data = filter(pca2, info == "start"), col = "red") +
+  theme(aspect.ratio = 1) +
+  facet_grid(cooling ~ eps)
+```
+
