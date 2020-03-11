@@ -53,9 +53,8 @@ search_better <- function(current, alpha = 0.5, index, max.tries = 125,
 #' Search for better projection, with stochastic component.
 #' @keywords internal
 search_better_random <- function(current, alpha = 0.5, index,
-  max.tries = 125, method = "linear", eps = 0.001, cur_index = NA
+  max.tries = 25, method = "linear", eps = 0.001, cur_index = NA
 ) {
-  #browser()
   if (is.na(cur_index)) cur_index <- index(current)
 
   try <- 1
@@ -74,16 +73,16 @@ search_better_random <- function(current, alpha = 0.5, index,
     if (new_index > cur_index) {
       cur_index <<- new_index
 
-      record <<- record %>%
+      record <- record %>%
         mutate(row = row_number(),
                info = ifelse(row == max(row), "new_basis", info)) %>%
         dplyr::select(-row)
 
       return(list(record = record,
                   target = record$basis[[length(record$basis)]]))
-
     }
     else if (abs(new_index-cur_index) < eps) {
+      cat("insert random step since abs(new_index-cur_index) < eps")
       new_basis <- basis_random(nrow(current), ncol(current))
 
       record_temp <- tibble(basis = list(new_basis),
@@ -92,7 +91,7 @@ search_better_random <- function(current, alpha = 0.5, index,
                              tries = tries,
                             loop = try)
 
-      record <<- record %>% bind_rows(record_temp)
+      record <- record %>% bind_rows(record_temp)
       return(list(record = record,
                   target = record$basis[[length(record$basis)]]))
 
@@ -101,6 +100,7 @@ search_better_random <- function(current, alpha = 0.5, index,
     try <-  try + 1
   }
 }
+
 
 
 
