@@ -34,6 +34,59 @@ interp %>%
   geom_line()
 ```
 
+
+```{r}
+index <- bind_rows(better_alpha_new, better_alpha) %>% 
+  mutate(type = c(rep("with interrupt", nrow(better_alpha_new)),
+                  rep("without interrupt", nrow(better_alpha)))) %>% 
+  filter(cooling %in% c(0.95, 0.99, 0.995), 
+         alpha ==0.5, info == "interpolation") %>% 
+  group_by(cooling, type) %>% 
+  mutate(id = row_number()) %>% 
+  ungroup() %>% 
+  mutate(cooling = as.factor(cooling))
+
+index %>%
+  ggplot(aes(x = id, y = index_val, col = type, group = type)) +
+  geom_line() +
+  facet_wrap(vars(cooling),nrow = 3) + 
+  ggtitle("Simulation with alpha = 0.5 and different cooling parameters")
+```
+
+
+```{r better-pca}
+temp <-bind_rows(better_alpha_new, better_alpha) %>% 
+  mutate(type = c(rep("with interrupt", nrow(better_alpha_new)),
+                  rep("without interrupt", nrow(better_alpha)))) %>% 
+  filter(cooling %in% c(0.95, 0.99, 0.995), alpha ==0.5) %>% 
+  mutate(val_lag = lag(index_val), 
+         info_lag = lag(info),
+         compare = case_when(tries <= 2 ~ "not relevant",
+           type == "with interrupt" ~ "interrupt",
+                             info != "interpolation" ~ "other", 
+                             index_val > val_lag ~ "increase", 
+                             index_val < val_lag ~ "decrease",
+                             info_lag == "new_basis" ~ "other"
+                             )) %>% 
+  group_by(cooling) %>% 
+  mutate(dup = duplicated(index_val), 
+         compare = ifelse(dup & compare == "decrease", 
+                          "common", compare)) %>% 
+  pca_better_interrupt() 
+
+temp %>% 
+  ggplot(aes(x= PC1, y = PC2)) +
+  geom_point(aes(col = info)) +
+  geom_point(data = filter(temp, info == "start"), aes(col = info)) +
+  geom_point(data = filter(temp, info == "new_basis"), aes(col = info)) +
+  geom_point(data = filter(temp, compare == "decrease"), col = "blue") + 
+  theme(aspect.ratio = 1) +
+  facet_grid(type ~cooling)
+
+```
+
+
+
 ```{r}
 temp <- sample %>% pca_better() %>% 
   mutate(type= as.factor(cumsum(ifelse(info == "start", 1,0))),
@@ -166,54 +219,3 @@ bind_rows(random_max_index_val,max_index_val) %>%
   geom_point() + 
   facet_wrap(vars(cooling))
 ```
-
-```{r}
-index <- bind_rows(better_alpha_new, better_alpha) %>% 
-  mutate(type = c(rep("with interrupt", nrow(better_alpha_new)),
-                  rep("without interrupt", nrow(better_alpha)))) %>% 
-  filter(cooling %in% c(0.95, 0.99, 0.995), 
-         alpha ==0.5, info == "interpolation") %>% 
-  group_by(cooling, type) %>% 
-  mutate(id = row_number()) %>% 
-  ungroup() %>% 
-  mutate(cooling = as.factor(cooling))
-
-index %>%
-  ggplot(aes(x = id, y = index_val, col = type, group = type)) +
-  geom_line() +
-  facet_wrap(vars(cooling),nrow = 3)
-
-
-```
-
-```{r better-pca}
-temp <-bind_rows(better_alpha_new, better_alpha) %>% 
-  mutate(type = c(rep("with interrupt", nrow(better_alpha_new)),
-                  rep("without interrupt", nrow(better_alpha)))) %>% 
-  filter(cooling %in% c(0.95, 0.99, 0.995), alpha ==0.5) %>% 
-  mutate(val_lag = lag(index_val), 
-         info_lag = lag(info),
-         compare = case_when(tries <= 2 ~ "not relevant",
-           type == "with interrupt" ~ "interrupt",
-                             info != "interpolation" ~ "other", 
-                             index_val > val_lag ~ "increase", 
-                             index_val < val_lag ~ "decrease",
-                             info_lag == "new_basis" ~ "other"
-                             )) %>% 
-  group_by(cooling) %>% 
-  mutate(dup = duplicated(index_val), 
-         compare = ifelse(dup & compare == "decrease", 
-                          "common", compare)) %>% 
-  pca_better_interrupt() 
-
-temp %>% 
-  ggplot(aes(x= PC1, y = PC2)) +
-  geom_point(aes(col = info)) +
-  geom_point(data = filter(temp, info == "start"), aes(col = info)) +
-  geom_point(data = filter(temp, info == "new_basis"), aes(col = info)) +
-  geom_point(data = filter(temp, compare == "decrease"), col = "blue") + 
-  theme(aspect.ratio = 1) +
-  facet_grid(type ~cooling)
-
-```
-
