@@ -24,7 +24,11 @@ compute_random_eps<- function(eps, cooling){
 
 temp <- compute_random_eps(0.001, 0.95)
 #eps <- c(0.001,0.01, 0.05, 0.1, 0.5)
+<<<<<<< HEAD
 eps <- c(1e-5, 5e-5, 1e-4, 5e-4, 0.001)
+=======
+eps <- c(1e-5, 5e-5, 1e-4, 5e-4, 0.001, 0005, 0.01)
+>>>>>>> b1bb63224cd535e2df6e698abff890e99409a36f
 cooling <- c(0.95, 0.99, 0.995)
 paras <- expand.grid(eps, cooling)
 
