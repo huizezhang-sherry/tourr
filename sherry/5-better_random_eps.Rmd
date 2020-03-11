@@ -9,12 +9,12 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(foreach)
-load(here::here("sherry", "data", "better_alpha.rda"))
+load(here::here("sherry", "data", "better_alpha_new.rda"))
 load(here::here("sherry", "data", "better_random_eps.rda"))
 source(here::here("sherry", "compute_pca.R"))
 
 
-better_alpha0.5 <- better_alpha %>% 
+better_alpha0.5 <- better_alpha_new %>% 
   filter(alpha == 0.5, cooling %in%  c(0.95, 0.99, 0.995))
 ```
 
