@@ -1,8 +1,4 @@
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(forcats)
-library(purrr)
+library(tidyverse)
 library(foreach)
 
 set.seed(1234)
