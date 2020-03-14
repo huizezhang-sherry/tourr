@@ -154,8 +154,11 @@ x2_path <- x2_animate %>%
   #facet_zoom(x = (tries == 7 & info %in% c("direction_search",
   #                                               "best_direction_search")))
    #ylim = c(0.7866, 0.7875)
+
+last_tries <- x2_animate$tries[which.max(x2_animate$loop)]
+
 direction <- x2_animate %>% 
-  filter(index_val > 0.930, info != "line_search") %>% 
+  filter(tries == last_tries, info != "line_search") %>% 
   ggplot(aes(x= animate_id, y= index_val, col = info)) + 
   geom_point() + 
   xlim(1, max(x2_animate$animate_id)) + 
