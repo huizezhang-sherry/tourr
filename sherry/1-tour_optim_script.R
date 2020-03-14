@@ -37,7 +37,8 @@ compute_global_object_geodesic <- function(var, names){
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
-                                       search_f = search_geodesic_latest)) %>%
+                                       search_f = search_geodesic_latest),
+                         sphere = TRUE) %>%
     mutate(col = names) %>%
     mutate(method = "geodesic")
 
@@ -49,7 +50,8 @@ compute_global_object_better <- function(var, names){
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
-                                       search_f = search_better)) %>%
+                                       search_f = search_better),
+                         sphere = TRUE) %>%
     mutate(col = names) %>%
     mutate(method = "better")
 
@@ -61,7 +63,8 @@ compute_global_object_better_random <- function(var, names){
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
-                                       search_f = search_better_random)) %>%
+                                       search_f = search_better_random),
+                         sphere = TRUE) %>%
     mutate(col = names) %>%
     mutate(method = "better_random")
 
