@@ -37,37 +37,37 @@ compute_global_object_geodesic <- function(var, names){
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
-                                       search_f = search_geodesic_latest),
-                         sphere = TRUE) %>%
+                                       search_f = search_geodesic_latest)) %>%
     mutate(col = names) %>%
     mutate(method = "geodesic")
 
   return(result)
 }
+
 compute_global_object_better <- function(var, names){
   data <- cbind(x1,var, x8, x9, x10)
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
-                                       search_f = search_better),
-                         sphere = TRUE) %>%
+                                       search_f = search_better)) %>%
     mutate(col = names) %>%
     mutate(method = "better")
 
   return(result)
 }
+
 compute_global_object_better_random <- function(var, names){
   data <- cbind(x1,var, x8, x9, x10)
 
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
-                                       search_f = search_better_random),
-                         sphere = TRUE) %>%
+                                       search_f = search_better_random)) %>%
     mutate(col = names) %>%
     mutate(method = "better_random")
 
   return(result)
 }
+
 compute_pca <- function(data, names){
   rows <- data %>% filter(col == names)
   pca <- foreach::foreach(i  = 1:nrow(rows), .combine = "rbind") %do%{
