@@ -15,11 +15,11 @@
 #' @param index interestingness index function
 #' @param max.tries maximum number of failed attempts before giving up
 #' @param n number of random steps to take to find best direction
-#' @param stepS step size for evaluation of best direction
+#' @param delta step size for evaluation of best direction
 #' @param cur_index index value for starting projection, set NA if it needs to
 #'   be calculated
 #' @keywords optimize
-search_geodesic_latest <- function(current, alpha = 1, index, max.tries = 5, n = 5, stepS = 0.01, cur_index = NA) {
+search_geodesic_latest <- function(current, alpha = 1, index, max.tries = 5, n = 5, delta = 0.01, cur_index = NA) {
   #browser()
   if (is.na(cur_index)) cur_index <- index(current)
 
@@ -28,7 +28,7 @@ search_geodesic_latest <- function(current, alpha = 1, index, max.tries = 5, n =
     # Try 5 random directions and pick the one that has the highest
     # index after a small step in either direction
     # change the original parameter tries to counter since it conflicts with the tries in geodesic-path.r
-    direction <- find_best_dir(old = current, index, counter = n, dist=stepS)
+    direction <- find_best_dir(old = current, index, counter = n, dist=delta)
     best_dir <- direction$best_dir
     direction_search <- direction$record_temp %>% mutate(loop = try)
 

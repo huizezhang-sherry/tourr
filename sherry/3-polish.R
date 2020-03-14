@@ -11,26 +11,26 @@ a <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
                   polish = TRUE)
 
 
-compute_geodesic_alpha <- function(stepS, polish_alpha){
+compute_geodesic_alpha <- function(delta, polish_alpha){
 
   animate_dist(data, tour_path =
-                           guided_tour(holes(), d = 1,stepS = stepS,
+                           guided_tour(holes(), d = 1,delta = delta,
                                        search_f = search_geodesic_latest),
                polish = TRUE,
                polish_alpha = polish_alpha,
                sphere = TRUE) %>%
-    mutate(stepS = stepS, polish_alpha = polish_alpha) %>%
+    mutate(delta = delta, polish_alpha = polish_alpha) %>%
     mutate(method = "geodesic")
 
 }
 
 set.seed(123456)
-stepS <- c(0.01, 0.1, 0.5, 0.9)
+delta <- c(0.01, 0.1, 0.5, 0.9)
 polish_alpha <- c(0.01, 0.05, 0.1,0.2, 0.3,0.4, 0.5, 0.7, 0.9)
-grid <- expand.grid(stepS = stepS, polish_alpha = polish_alpha)
+grid <- expand.grid(delta = delta, polish_alpha = polish_alpha)
 geodesic_polished <- foreach(i = 1:nrow(grid), .combine = "rbind") %do%{
   set.seed(123456)
-  compute_geodesic_alpha(grid$stepS[i], grid$polish_alpha[i])
+  compute_geodesic_alpha(grid$delta[i], grid$polish_alpha[i])
 }
 
 # save(geodesic_polished, file = "sherry/data/geodesic_polished.rda")
@@ -40,11 +40,11 @@ pca <- geodesic_alpha %>% compute_pca() %>%
   filter(info %in% c("start", "interpolation"))
 
 pca %>%
-  ggplot(aes(x= PC1, y = PC2, col = as.factor(stepS))) +
+  ggplot(aes(x= PC1, y = PC2, col = as.factor(delta))) +
   geom_point() +
   geom_point(data = filter(pca, info == "start"), col = "red") +
   theme(aspect.ratio = 1) +
-  facet_wrap(vars(stepS))
+  facet_wrap(vars(delta))
 
 
 

@@ -42,13 +42,13 @@ compute_random_alpha <- function(alpha, cooling){
     mutate(method = "search_better_random")
 
 }
-compute_geodesic_alpha <- function(stepS){
+compute_geodesic_alpha <- function(delta){
 
   animate_dist(data, tour_path =
-                           guided_tour(holes(), d = 1, stepS = stepS,
+                           guided_tour(holes(), d = 1, delta = delta,
                                        search_f = search_geodesic_latest),
                sphere = TRUE) %>%
-    mutate(stepS = stepS) %>%
+    mutate(delta = delta) %>%
     mutate(method = "geodesic")
 
 }
@@ -62,8 +62,8 @@ alpha <- c(0.1, 0.2, 0.3, 0.4 ,0.5)
 cooling <- c(0.8, 0.85, 0.9, 0.95, 0.99, 0.995)
 paras <- expand.grid(alpha, cooling)
 # search_geodesic
-stepS <- c(0.01, 0.1, 0.5, 0.9)
-stepS2 <- c(0.01, 0.02, 0.05, 0.07, 0.09,  seq(0.1, 0.9, 0.1))
+delta <- c(0.01, 0.1, 0.5, 0.9)
+delta2 <- c(0.01, 0.02, 0.05, 0.07, 0.09,  seq(0.1, 0.9, 0.1))
 ################################
 
 # simulation
@@ -78,14 +78,14 @@ better_random_alpha <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
   compute_random_alpha(paras$Var1[i], paras$Var2[i])
 }
 
-geodesic_alpha <- foreach(i = 1:length(stepS), .combine = "rbind") %do%{
+geodesic_alpha <- foreach(i = 1:length(delta), .combine = "rbind") %do%{
   set.seed(123456)
-  compute_geodesic_alpha(stepS[i])
+  compute_geodesic_alpha(delta[i])
 }
 
-geodesic_alpha2 <- foreach(i = 1:length(stepS2), .combine = "rbind") %do%{
+geodesic_alpha2 <- foreach(i = 1:length(delta2), .combine = "rbind") %do%{
   set.seed(123456)
-  compute_geodesic_alpha(stepS[i])
+  compute_geodesic_alpha(delta[i])
 }
 
 # with interruption

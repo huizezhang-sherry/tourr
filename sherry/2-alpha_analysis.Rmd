@@ -37,7 +37,7 @@ Key points:
 
 - The search_geodesic doesn't seem to have high fluctuation in the interpolation path. 
 
-- The default value of `stepS` parameter could be set to better value: 0.5 would be good.
+- The default value of `delta` parameter could be set to better value: 0.5 would be good.
 
 
 ## Preliminary
@@ -66,7 +66,7 @@ A simulation with different grid values of alpha and cooling parameter:
 
 - `search_geodesic()`
 
-  - stepS: 0.001, 0.01 (default), 0.1, 0.5
+  - delta: 0.001, 0.01 (default), 0.1, 0.5
 
 ## Result
 
@@ -235,23 +235,23 @@ bind_rows(random_max_index_val,max_index_val) %>%
 
 
 
-### **3. A starting value of `stepS = 0.01` is also too small for search_geodesic()**
+### **3. A starting value of `delta = 0.01` is also too small for search_geodesic()**
 
-- simulate for a wider range of stepS value `stepS <- c(0.01, 0.02, 0.05, 0.07, 0.09,  seq(0.1, 0.9, 0.1))`
+- simulate for a wider range of delta value `delta <- c(0.01, 0.02, 0.05, 0.07, 0.09,  seq(0.1, 0.9, 0.1))`
 
 - `search_geodesic()` doesn't seem to have the hill-and-valley pattern in the searching path. 
 
-- Different stepS attains pretty similar ending `index_val`, depending on precision. (some paths are exactly the same, the plot below only show the distinct path).  
+- Different delta attains pretty similar ending `index_val`, depending on precision. (some paths are exactly the same, the plot below only show the distinct path).  
 
-- The different of using different stepS affects the effectiveness of the directional search. As stepS becomes larger, the "radius" of the searching becomes larger and the directional search is no longer a infinitesimal search (see the pca plot).  An ideal stepS between 0.01 to 0.1 is recommended.
+- The different of using different deltas affects the effectiveness of the directional search. As delta becomes larger, the "radius" of the searching becomes larger and the directional search is no longer a infinitesimal search (see the pca plot).  An ideal delta between 0.01 to 0.1 is recommended.
 
-```{r compare-stepS-index}
+```{r compare-delta-index}
 geodesic_clean <- geodesic_alpha2 %>%
   filter(info == "interpolation") %>%
-  mutate(stepS = as.factor(stepS))
+  mutate(delta = as.factor(delta))
 
 best <- geodesic_clean %>%
-  group_by(stepS) %>%
+  group_by(delta) %>%
   mutate(id = row_number()) %>%
   filter(index_val == max(index_val))
 
@@ -261,43 +261,43 @@ nondup <- best %>%
   filter(dup == FALSE)
 
 geodesic_interp <- geodesic_clean %>%
-   filter(stepS %in% nondup$stepS) %>% 
-  group_by(stepS) %>%
+   filter(delta %in% nondup$delta) %>% 
+  group_by(delta) %>%
   mutate(id = row_number())
 
 geodesic_interp %>% 
-  ggplot(aes(x = id, y = index_val, col = stepS)) +
+  ggplot(aes(x = id, y = index_val, col = delta)) +
   geom_path() +
   ggrepel::geom_text_repel(data = nondup, 
                            aes(label = round(index_val, 4)))
 ```
 
-```{r compare-stepS-pca}
+```{r compare-delta-pca}
 pca2 <- geodesic_alpha2 %>% 
   pca_geodesic() %>%
   filter(info %in% c("start", "interpolation"))
 
 pca2 %>%
-  ggplot(aes(x= PC1, y = PC2, col = as.factor(stepS))) +
+  ggplot(aes(x= PC1, y = PC2, col = as.factor(delta))) +
   geom_point() +
   geom_point(data = filter(pca2, info == "start"), col = "red") +
   theme(aspect.ratio = 1) +
-  facet_wrap(vars(stepS))
+  facet_wrap(vars(delta))
 
 ```
 
 ```{r direction-search-index}
 geodesic_alpha2 %>% 
-  group_by(stepS) %>% 
+  group_by(delta) %>% 
   mutate(id = row_number()) %>% 
   ggplot(aes(x = id, y = index_val, col = info)) + 
   geom_point() + 
-  facet_wrap(vars(stepS))
+  facet_wrap(vars(delta))
 ```
 
 ```{r direction-search-pca}
 x2_object <- geodesic_alpha2 %>% 
-  group_by(stepS) %>% 
+  group_by(delta) %>% 
   pca_geodesic() 
 
 x2_releveled <- x2_object %>% filter(info != "interpolation")
@@ -307,5 +307,5 @@ x2_object %>%
   geom_point() +
   geom_point(data = x2_releveled) +
   theme(aspect.ratio = 1) + 
-  facet_wrap(vars(stepS))
+  facet_wrap(vars(delta))
 ```
