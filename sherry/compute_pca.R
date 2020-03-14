@@ -11,7 +11,7 @@ pca_geodesic <- function(data){
                                        info = data$info,
                                        tries = data$tries,
                                        index_val = data$index_val,
-                                       stepS = data$stepS)
+                                       delta = data$delta)
 
   colnames(result)[1:5] <- c("x1", "x8", "x9", "x10", "x2")
 
