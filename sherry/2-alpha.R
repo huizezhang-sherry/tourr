@@ -1,8 +1,4 @@
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(forcats)
-library(purrr)
+library(tidyverse)
 library(foreach)
 library(doFuture)
 registerDoFuture()
@@ -10,8 +6,14 @@ plan(multicore)
 
 # load data and trial
 load(here::here("sherry", "data", "data.rda"))
+set.seed(123456)
 a <- tourr::animate_dist(data, tour_path = guided_tour(holes(), d = 1,
-                                           search_f = search_geodesic_latest))
+                                           search_f = search_geodesic_latest),
+                         sphere = TRUE)
+
+set.seed(123456)
+a <- tourr::animate_dist(data, tour_path = guided_tour(holes(), d = 1,
+                                                       search_f = search_geodesic_latest))
 
 ################################
 
@@ -22,7 +24,7 @@ compute_better_alpha<- function(alpha, cooling){
                            guided_tour(holes(), d = 1, alpha = alpha,
                                        cooling = cooling,
                                        search_f = search_better),
-                         sphere = TRUE) %>%
+               sphere = TRUE) %>%
     mutate(alpha = alpha) %>%
     mutate(cooling = cooling ) %>%
     mutate(method = "search_better")
@@ -34,7 +36,7 @@ compute_random_alpha <- function(alpha, cooling){
                            guided_tour(holes(), d = 1, alpha = alpha,
                                        cooling = cooling,
                                        search_f = search_better_random),
-                         sphere = TRUE) %>%
+               sphere = TRUE) %>%
     mutate(alpha = alpha) %>%
     mutate(cooling = cooling ) %>%
     mutate(method = "search_better_random")
@@ -45,7 +47,7 @@ compute_geodesic_alpha <- function(stepS){
   animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1, stepS = stepS,
                                        search_f = search_geodesic_latest),
-                         sphere = TRUE) %>%
+               sphere = TRUE) %>%
     mutate(stepS = stepS) %>%
     mutate(method = "geodesic")
 
@@ -65,14 +67,17 @@ stepS2 <- c(0.01, 0.02, 0.05, 0.07, 0.09,  seq(0.1, 0.9, 0.1))
 ################################
 
 # simulation
+# without interruption
 better_alpha <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
   set.seed(123456)
   compute_better_alpha(paras$Var1[i], paras$Var2[i])
 }
+
 better_random_alpha <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
   set.seed(123456)
   compute_random_alpha(paras$Var1[i], paras$Var2[i])
 }
+
 geodesic_alpha <- foreach(i = 1:length(stepS), .combine = "rbind") %do%{
   set.seed(123456)
   compute_geodesic_alpha(stepS[i])
@@ -83,6 +88,7 @@ geodesic_alpha2 <- foreach(i = 1:length(stepS2), .combine = "rbind") %do%{
   compute_geodesic_alpha(stepS[i])
 }
 
+# with interruption
 better_alpha_new <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
   set.seed(123456)
   compute_better_alpha(paras$Var1[i], paras$Var2[i])
