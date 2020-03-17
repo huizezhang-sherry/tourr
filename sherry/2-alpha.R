@@ -9,11 +9,7 @@ load(here::here("sherry", "data", "data.rda"))
 set.seed(123456)
 a <- tourr::animate_dist(data, tour_path = guided_tour(holes(), d = 1,
                                            search_f = search_geodesic_latest),
-                         sphere = TRUE)
-
-set.seed(123456)
-a <- tourr::animate_dist(data, tour_path = guided_tour(holes(), d = 1,
-                                                       search_f = search_geodesic_latest))
+                         sphere = FALSE, rescale = FALSE)
 
 ################################
 
@@ -24,7 +20,7 @@ compute_better_alpha<- function(alpha, cooling){
                            guided_tour(holes(), d = 1, alpha = alpha,
                                        cooling = cooling,
                                        search_f = search_better),
-               sphere = TRUE) %>%
+               sphere = TRUE, rescale = FALSE) %>%
     mutate(alpha = alpha) %>%
     mutate(cooling = cooling ) %>%
     mutate(method = "search_better")
@@ -36,7 +32,7 @@ compute_random_alpha <- function(alpha, cooling){
                            guided_tour(holes(), d = 1, alpha = alpha,
                                        cooling = cooling,
                                        search_f = search_better_random),
-               sphere = TRUE) %>%
+               sphere = TRUE, rescale = FALSE) %>%
     mutate(alpha = alpha) %>%
     mutate(cooling = cooling ) %>%
     mutate(method = "search_better_random")
@@ -47,7 +43,7 @@ compute_geodesic_alpha <- function(delta){
   animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1, delta = delta,
                                        search_f = search_geodesic_latest),
-               sphere = TRUE) %>%
+               sphere = TRUE, rescale = FALSE) %>%
     mutate(delta = delta) %>%
     mutate(method = "geodesic")
 
@@ -85,7 +81,7 @@ geodesic_alpha <- foreach(i = 1:length(delta), .combine = "rbind") %do%{
 
 geodesic_alpha2 <- foreach(i = 1:length(delta2), .combine = "rbind") %do%{
   set.seed(123456)
-  compute_geodesic_alpha(delta[i])
+  compute_geodesic_alpha(delta2[i])
 }
 
 # with interruption
