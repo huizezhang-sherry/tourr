@@ -5,12 +5,14 @@
 \title{calculate index value given the dataset and projection bases using holes()
 created to allow calculate index outside the whole loop}
 \usage{
-calc_index(data, proj)
+calc_index(data, proj, sphere = TRUE)
 }
 \arguments{
 \item{data}{the initial data used}
 
 \item{proj}{the projection basis}
+
+\item{sphere}{a binary indicator whether the data need to be sphered}
 }
 \description{
 calculate index value given the dataset and projection bases using holes()

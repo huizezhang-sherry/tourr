@@ -8,7 +8,7 @@
 display_dist(method = "density", center = TRUE, half_range = NULL,
   rug = FALSE, ...)
 
-animate_dist(data, tour_path = grand_tour(1), ...)
+animate_dist(data, tour_path = grand_tour(1), polish = FALSE, ...)
 }
 \arguments{
 \item{method}{display method, histogram or density plot}

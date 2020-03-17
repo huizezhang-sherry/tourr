@@ -4,8 +4,8 @@
 \alias{search_polish}
 \title{Polish the searching after search_geodesic}
 \usage{
-search_polish(current, alpha_polish = 0.01, index, max_tries = 500,
-  method = "linear")
+search_polish(current, alpha_polish = 0.1, index, data,
+  max_tries = 5000, method = "linear")
 }
 \arguments{
 \item{current}{starting projection}
