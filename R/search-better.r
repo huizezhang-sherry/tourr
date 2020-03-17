@@ -47,6 +47,19 @@ search_better <- function(current, alpha = 0.5, index, max.tries = 125,
     try <- try + 1
   }
 
+  cat("Final projection: \n")
+  if (ncol(current)==1) {
+    for (i in 1:length(current))
+      cat(sprintf("%.3f",current[i])," ")
+    cat("\n")
+  }
+  else {
+    for (i in 1:nrow(current)) {
+      for (j in 1:ncol(current))
+        cat(sprintf("%.3f",current[i,j])," ")
+      cat("\n")
+    }
+  }
   NULL
 }
 
@@ -98,6 +111,20 @@ search_better_random <- function(current, alpha = 0.5, index,
     }
 
     try <-  try + 1
+  }
+
+  cat("Final projection: \n")
+  if (ncol(current)==1) {
+    for (i in 1:length(current))
+      cat(sprintf("%.3f",current[i])," ")
+    cat("\n")
+  }
+  else {
+    for (i in 1:nrow(current)) {
+      for (j in 1:ncol(current))
+        cat(sprintf("%.3f",current[i,j])," ")
+      cat("\n")
+    }
   }
 }
 
