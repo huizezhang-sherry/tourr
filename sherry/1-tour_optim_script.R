@@ -21,10 +21,7 @@ origin_dt %>%
   geom_density(aes(y=0.5 * ..count..)) +
   facet_wrap(vars(names), ncol = 3)
 
-#save(origin_dt,file = "sherry/data/origin_dt.rda")
-
 data <- cbind(x1, x2, x8, x9, x10)
-#save(data,file = "sherry/data/data.rda")
 
 ################################
 
@@ -34,7 +31,7 @@ compute_global_object_geodesic <- function(var, names){
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
                                        search_f = search_geodesic_latest),
-                         sphere = TRUE) %>%
+                         sphere = FALSE, rescale = FALSE) %>%
     mutate(col = names) %>%
     mutate(method = "geodesic")
 
@@ -47,7 +44,7 @@ compute_global_object_better <- function(var, names){
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
                                        search_f = search_better),
-                         sphere = TRUE) %>%
+                         sphere = FALSE, rescale = FALSE) %>%
     mutate(col = names) %>%
     mutate(method = "better")
 
@@ -60,7 +57,7 @@ compute_global_object_better_random <- function(var, names){
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
                                        search_f = search_better_random),
-                         sphere = TRUE) %>%
+                         sphere = FALSE, rescale = FALSE) %>%
     mutate(col = names) %>%
     mutate(method = "better_random")
 
