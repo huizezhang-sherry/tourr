@@ -37,7 +37,7 @@ display_dist <- function(method="density", center = TRUE, half_range = NULL, rug
   render_frame <- function() {
     par(pty="m",mar=c(4,4,1,1))
     plot(
-      x = NA, y = NA, xlim = c(-1, 1.2), ylim = c(-1.1, 3),
+      x = NA, y = NA, xlim = c(-1, 1.2), ylim = c(-2.1, 2.5),
       xaxs = "i", yaxs = "i",
       xlab = "Data Projection", ylab = "Density", yaxt = "n"
     )
@@ -45,7 +45,7 @@ display_dist <- function(method="density", center = TRUE, half_range = NULL, rug
 
   }
   render_transition <- function() {
-    rect(-1, -1.1, 1.2, 3, col="#FFFFFFE6", border=NA)
+    rect(-1, -1.1, 1.2, 2.5, col="#FFFFFFE6", border=NA)
   }
   render_data <- function(data, proj, geodesic, index_val) {
     abline(h = seq(0.5, 3.5, by=0.5), col="grey80")
@@ -80,9 +80,14 @@ display_dist <- function(method="density", center = TRUE, half_range = NULL, rug
     ax <- seq_along(proj) / length(proj)
     segments(0, -ax, proj, -ax, col="black", lwd=3)
     text(1.0, -ax, labels, pos = 4)
+    text(0.8, -1.2,paste0("Index value: ", round(last(record$index_val), 4)), font = 2)
+    dt <- record %>%
+      filter(info == "interpolation") %>%
+      dplyr::select(id, index_val) %>%
+      mutate(id = id/200-1, index_val = index_val-2.5)
 
-    # display index
-    #text(0.7, 2.8, labels = index_val)
+    lines(dt, type = "l" ,col = "black",lwd = 2)
+
   }
 
   list(

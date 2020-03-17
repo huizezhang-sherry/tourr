@@ -110,7 +110,7 @@ new_tour <- function(data, tour_path, start = NULL) {
     #
     # }
 
-    record <<- record %>% bind_rows(temp)
+    record <<- record %>% bind_rows(temp) %>% mutate(id = row_number())
 
     list(proj = proj, target = target, step = step, record = record)
 
