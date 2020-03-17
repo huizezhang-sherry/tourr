@@ -43,7 +43,7 @@ new_geodesic_path <- function(name, generator, frozen = NULL, ...) {
 
       tries <- tries + 1
       # give up, generator produced 10 equivalent frames in a row
-      if (tries > 10) return(NULL)
+      if (tries > 20) return(NULL)
 
       dist <- proj_dist(current, target)
       cat("generation:  dist =  ", dist, "\n")
