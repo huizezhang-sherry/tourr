@@ -18,19 +18,19 @@ data_mult_scaled <- data_mult%>% scale()
 
 ################################
 # when having two informative variables - one-dimensional projection would find either one of the informative variable
-# set.seed(12345)
-# a <- tourr::animate_dist(data_mult_scaled,
-#                          tour_path = guided_tour(holes(), d = 1,
-#                                                  search_f = search_geodesic_latest),
-#                          sphere = FALSE, rescale = FALSE)
-#
-# proj <- a %>% filter(info == "interpolation") %>%  pull(basis) %>% tail(1)
-# projected <- data_mult_scaled %*% proj[[1]] %>% as_tibble()
-#
-# projected %>%
-#   ggplot(aes(x = V1)) +
-#   geom_histogram(binwidth = 0.1) +
-#   geom_density(aes(y=0.1 * ..count..))
+set.seed(12345)
+a <- tourr::animate_dist(data_mult_scaled,
+                         tour_path = guided_tour(holes(), d = 1,
+                                                 search_f = search_geodesic_latest),
+                         sphere = FALSE, rescale = FALSE)
+
+proj <- a %>% filter(info == "interpolation") %>%  pull(basis) %>% tail(1)
+projected <- data_mult_scaled %*% proj[[1]] %>% as_tibble()
+
+projected %>%
+  ggplot(aes(x = V1)) +
+  geom_histogram(binwidth = 0.1) +
+  geom_density(aes(y=0.1 * ..count..))
 
 ################################
 # two dimensional projection

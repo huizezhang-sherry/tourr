@@ -369,6 +369,15 @@ summary {
 </div>
 
 
+<pre class="r"><code>set.seed(1234)
+x1 &lt;- rnorm(1000, 0, 1)
+x2 &lt;- sample(c(rnorm(500, -3, 1), rnorm(500, 3, 1)), size = 1000)
+x7 &lt;- sample(c(rnorm(500, -5, 1), rnorm(500, 5, 1)), size = 1000)
+x8 &lt;- rnorm(1000, 0, 1)
+x9 &lt;- rnorm(1000, 0, 1)
+x10 &lt;- rnorm(1000, 0, 1)
+
+data_mult &lt;- cbind(x1, x2, x7, x8, x9, x10)</code></pre>
 <pre class="r"><code>origin_dt_bi &lt;- data_mult %&gt;% as_tibble() %&gt;% 
   gather(names, values) %&gt;%
   mutate(names = as_factor(names),

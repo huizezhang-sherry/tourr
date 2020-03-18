@@ -18,6 +18,19 @@ load(here::here("sherry", "data", "mult_geodesic.rda"))
 load(here::here("sherry", "data", "mult_object.rda"))
 ```
 
+```{r eval = FALSE}
+set.seed(1234)
+x1 <- rnorm(1000, 0, 1)
+x2 <- sample(c(rnorm(500, -3, 1), rnorm(500, 3, 1)), size = 1000)
+x7 <- sample(c(rnorm(500, -5, 1), rnorm(500, 5, 1)), size = 1000)
+x8 <- rnorm(1000, 0, 1)
+x9 <- rnorm(1000, 0, 1)
+x10 <- rnorm(1000, 0, 1)
+
+data_mult <- cbind(x1, x2, x7, x8, x9, x10)
+```
+
+
 ```{r}
 origin_dt_bi <- data_mult %>% as_tibble() %>% 
   gather(names, values) %>%
