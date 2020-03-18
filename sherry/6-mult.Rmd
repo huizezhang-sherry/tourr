@@ -55,6 +55,29 @@ as_tibble(data_mult) %>% bind_cols(col) %>%
 
 ## `search_geodesic()`
 
+
+```{r}
+proj <- mult_geodesic %>% 
+  filter(info == "interpolation") %>% pull(basis) %>% tail(1)
+proj[[1]]
+round(proj[[1]])
+
+projected <- scale(data_mult) %*% proj[[1]] %>% as_tibble()
+p1 <- projected %>% 
+  ggplot(aes(x = V1, y= V2)) + 
+  geom_point() + 
+  ggtitle("without rounding")
+
+projected <- scale(data_mult) %*% round(proj[[1]]) %>% as_tibble()
+p2 <- projected %>% 
+  ggplot(aes(x = V1, y= V2)) + 
+  geom_point() + 
+  ggtitle("with rounding")
+
+p1 | p2
+```
+
+
 ```{r}
 mult_object <- mult_object %>% 
   mutate(info2 = ifelse(info %in% c("best_line_search",
