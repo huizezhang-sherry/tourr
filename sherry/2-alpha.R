@@ -9,18 +9,18 @@ load(here::here("sherry", "data", "data.rda"))
 set.seed(123456)
 a <- tourr::animate_dist(data, tour_path = guided_tour(holes(), d = 1,
                                            search_f = search_geodesic_latest),
-                         sphere = FALSE, rescale = FALSE)
+                         rescale = FALSE)
 
 ################################
 
 # functions to use
-compute_better_alpha<- function(alpha, cooling){
+compute_better_alpha <- function(alpha, cooling){
 
   animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1, alpha = alpha,
                                        cooling = cooling,
                                        search_f = search_better),
-               sphere = TRUE, rescale = FALSE) %>%
+               rescale = FALSE) %>%
     mutate(alpha = alpha) %>%
     mutate(cooling = cooling ) %>%
     mutate(method = "search_better")
@@ -32,7 +32,7 @@ compute_random_alpha <- function(alpha, cooling){
                            guided_tour(holes(), d = 1, alpha = alpha,
                                        cooling = cooling,
                                        search_f = search_better_random),
-               sphere = TRUE, rescale = FALSE) %>%
+               rescale = FALSE) %>%
     mutate(alpha = alpha) %>%
     mutate(cooling = cooling ) %>%
     mutate(method = "search_better_random")
@@ -43,7 +43,7 @@ compute_geodesic_alpha <- function(delta){
   animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1, delta = delta,
                                        search_f = search_geodesic_latest),
-               sphere = TRUE, rescale = FALSE) %>%
+               rescale = FALSE) %>%
     mutate(delta = delta) %>%
     mutate(method = "geodesic")
 
