@@ -21,50 +21,81 @@ load(here::here("sherry", "data", "pca_v1.rda"))
 load(here::here("sherry", "data", "pca_v2.rda"))
 ```
 
+
+# Simulated Data
+
+The data is simulated via the following code. Histogram of each variable is shown below. Each of `x2 : x7` has its own data structure while `x1, x8:x10` are randomly generated normal variables.
+
+
 ```{r eval = FALSE}
 set.seed(1234)
 x1 <- rnorm(1000, 0, 1)
 x2 <- sample(c(rnorm(500, -3, 1), rnorm(500, 3, 1)), size = 1000)
+x3 <- sample(c(rep(-1, 500), rep(1, 500)), size = 1000)
+x4 <- sample(c(rnorm(250, -3, 1), rnorm(750, 3, 1)), size = 1000)
+x5 <- sample(c(rnorm(330, -5, 1), rnorm(340, 0, 1), rnorm(330, 5, 1)), size = 1000)
+x6 <- sample(c(rnorm(450, -5, 1), rnorm(100, 0, 1), rnorm(450, 5, 1)), size = 1000)
 x7 <- sample(c(rnorm(500, -5, 1), rnorm(500, 5, 1)), size = 1000)
 x8 <- rnorm(1000, 0, 1)
 x9 <- rnorm(1000, 0, 1)
 x10 <- rnorm(1000, 0, 1)
 
-data_mult <- cbind(x1, x2, x7, x8, x9, x10)
+data_mult <- tibble::tibble(x1 = x1, x2 = x2, x3 = x3, 
+                               x4 = x4, x5 = x5, x6 = x6, x7 = x7,
+                               x8 = x8, x9 = x9, x10 = x10) %>% map_df(scale)
 ```
 
 
 ```{r}
-origin_dt_bi <- data_mult %>% as_tibble() %>% 
+origin_dt_bi <- data_mult %>% 
+  dplyr::select(-x3) %>% 
   gather(names, values) %>%
-  mutate(names = as_factor(names),
-         names = fct_relevel(names, levels = c("x1", "x2", "x7","x8", "x9", "x10")))
+  mutate(names = as_factor(names))
+  
 
-origin_dt_bi %>% 
+origin_dt_bi %>%
   ggplot(aes(x = values)) +
-  geom_histogram(binwidth = 0.5) +
-  geom_density(aes(y = 0.5 * ..count..)) +
+  geom_histogram(binwidth = 0.3) +
+  geom_density(aes(y = 0.3 * ..count..)) +
   facet_wrap(vars(names), ncol = 3)
-
-col <- data_mult %>% as_tibble() %>% 
-  transmute(col1 = ifelse(x2 < 0, "left", "right"), 
-                     col2 = ifelse(x7 < 0, "left", "right"))
-
-as_tibble(data_mult) %>% bind_cols(col) %>%  
-  ggplot(aes(x = x2, y = x7)) + 
-  geom_point()
-
 ```
 
-## `search_geodesic()`
+# `search_geodesic()`
 
+Searching method `Search_geodesic()` is performed on `x1, x2, x8:x10` with an additional variable from `x3: x7`. The following few screenshots are taken at the end of each trial and projection pursuit are able to find the data structure in all the caese. 
+
+```{r eval = FALSE}
+run_geodesic <- function(var){
+  set.seed(12345)
+  mult_geodesic <- data_mult[,c(1,2,var,8,9,10)] %>% 
+  animate_xy(tour_path = guided_tour(holes(), d = 2,
+                                     search_f = search_geodesic_latest),
+             rescale = FALSE)
+
+  return(mult_geodesic)
+}
+```
+
+
+```{r echo = FALSE}
+knitr::include_graphics(here::here("sherry", "fig", "x3.png"))
+knitr::include_graphics(here::here("sherry", "fig", "x4.png"))
+knitr::include_graphics(here::here("sherry", "fig", "x5.png"))
+knitr::include_graphics(here::here("sherry", "fig", "x6.png"))
+knitr::include_graphics(here::here("sherry", "fig", "x7.png"))
+```
+
+
+# PCA plot and index trace plot
+
+Similar to `1-tour_optim_documentation.html`, PCA plot and index_val tracing plot are provided. With two columns in each projection basis, PCA is done separately for each columns. The following demo uses variable `x1, x2, x7, x8, x9, x10`. 
 
 ```{r}
 proj <- mult_geodesic %>% 
   filter(info == "interpolation") %>% pull(basis) %>% tail(1)
 proj[[1]]
 
-projected <- scale(data_mult) %*% proj[[1]] %>% as_tibble()
+projected <- as.matrix(data_mult[,c(1,2,7,8,9,10)]) %*% proj[[1]] %>% as_tibble()
 projected %>% 
   ggplot(aes(x = V1, y = V2)) + 
   geom_point() + 
@@ -74,7 +105,7 @@ projected %>%
 ```
 
 
-# PCA plot for V1
+## PCA plot
 
 ```{r}
 # colour by parts of optimisation (static)
@@ -103,6 +134,7 @@ p2 <- pca_v2 %>%
 p1 + p2 + plot_layout(guides = "collect")
 ```
 
+## Index_val Tracing plot
 
 ```{r}
 mult_animate_v1 <- pca_v1 %>%
@@ -164,7 +196,7 @@ direction_v1 + mult_path_v1 + direction_v2 + mult_path_v2 +
 ```
 
 
-
+## Side-by-side animation
 ```{r pca-v1-animation}
 geo_animate <- mult_animate_v1 %>%
   ggplot(aes(x = PC1, y = PC2, col = info)) +
