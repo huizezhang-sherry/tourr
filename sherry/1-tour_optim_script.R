@@ -8,9 +8,12 @@ x8 <- rnorm(1000, 0, 1)
 x9 <- rnorm(1000, 0, 1)
 x10 <- rnorm(1000, 0, 1)
 
-origin_dt <- tibble::tibble(x1 = x1, x2 = x2, x8 = x8,
-                            x9 = x9,
-                            x10 = x10) %>%
+
+data <- tibble::tibble(x1 = x1, x2 = x2, x8 = x8,
+                       x9 = x9, x10 = x10) %>% map_df(scale)
+
+
+origin_dt <-  data %>%
   gather(names, values) %>%
   mutate(names = as_factor(names),
          names = fct_relevel(names, levels = c("x1", "x2", "x8", "x9", "x10")))
@@ -18,10 +21,9 @@ origin_dt <- tibble::tibble(x1 = x1, x2 = x2, x8 = x8,
 origin_dt %>%
   ggplot(aes(x = values)) +
   geom_histogram(binwidth = 0.5) +
-  geom_density(aes(y=0.5 * ..count..)) +
+  geom_density(aes(y = 0.5 * ..count..)) +
   facet_wrap(vars(names), ncol = 3)
 
-data <- cbind(x1, x2, x8, x9, x10)
 
 ################################
 
@@ -31,7 +33,7 @@ compute_global_object_geodesic <- function(var, names){
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
                                        search_f = search_geodesic_latest),
-                         sphere = FALSE, rescale = FALSE) %>%
+                         rescale = FALSE) %>%
     mutate(col = names) %>%
     mutate(method = "geodesic")
 
@@ -44,7 +46,7 @@ compute_global_object_better <- function(var, names){
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
                                        search_f = search_better),
-                         sphere = FALSE, rescale = FALSE) %>%
+                         rescale = FALSE) %>%
     mutate(col = names) %>%
     mutate(method = "better")
 
@@ -57,7 +59,7 @@ compute_global_object_better_random <- function(var, names){
   result <- animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1,
                                        search_f = search_better_random),
-                         sphere = FALSE, rescale = FALSE) %>%
+                         rescale = FALSE) %>%
     mutate(col = names) %>%
     mutate(method = "better_random")
 
@@ -66,14 +68,14 @@ compute_global_object_better_random <- function(var, names){
 
 compute_pca <- function(data, names){
   rows <- data %>% filter(col == names)
-  pca <- foreach::foreach(i  = 1:nrow(rows), .combine = "rbind") %do%{
+  pca <- foreach::foreach(i  = 1:nrow(rows), .combine = "rbind") %do% {
     t(rows$basis[[i]])
   }
 
   loadings <- stats::predict(stats::prcomp(pca))[,1:2]
   pca2 <- cbind(pca, loadings)
 
-  result <- as_tibble(pca2) %>% mutate(id = 1: nrow(pca2),
+  result <- as_tibble(pca2) %>% mutate(id = 1:nrow(pca2),
                                        info = rows$info,
                                        V5_names = rows$col,
                                        tries = rows$tries,
@@ -111,6 +113,7 @@ x2_object_better_random <- x2_better_random %>% compute_pca("x2") %>%
 
 ################################
 
+save(data, file = "sherry/data/data.rda")
 save(x2_geodesic, file = "sherry/data/x2_geodesic.rda")
 save(x2_object, file = "sherry/data/x2_object.rda")
 save(x2_better, file = "sherry/data/x2_better.rda")
