@@ -3,6 +3,8 @@ title: "6-mult"
 author: "Huize Zhang"
 date: "14/03/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +17,8 @@ library(magick)
 library(patchwork)
 load(here::here("sherry", "data", "data_mult.rda"))
 load(here::here("sherry", "data", "mult_geodesic.rda"))
-load(here::here("sherry", "data", "mult_object.rda"))
+load(here::here("sherry", "data", "pca_v1.rda"))
+load(here::here("sherry", "data", "pca_v2.rda"))
 ```
 
 ```{r eval = FALSE}
@@ -40,7 +43,7 @@ origin_dt_bi <- data_mult %>% as_tibble() %>%
 origin_dt_bi %>% 
   ggplot(aes(x = values)) +
   geom_histogram(binwidth = 0.5) +
-  geom_density(aes(y=0.5 * ..count..)) +
+  geom_density(aes(y = 0.5 * ..count..)) +
   facet_wrap(vars(names), ncol = 3)
 
 col <- data_mult %>% as_tibble() %>% 
@@ -60,54 +63,110 @@ as_tibble(data_mult) %>% bind_cols(col) %>%
 proj <- mult_geodesic %>% 
   filter(info == "interpolation") %>% pull(basis) %>% tail(1)
 proj[[1]]
-round(proj[[1]])
 
 projected <- scale(data_mult) %*% proj[[1]] %>% as_tibble()
-p1 <- projected %>% 
-  ggplot(aes(x = V1, y= V2)) + 
+projected %>% 
+  ggplot(aes(x = V1, y = V2)) + 
   geom_point() + 
   ggtitle("without rounding")
 
-projected <- scale(data_mult) %*% round(proj[[1]]) %>% as_tibble()
-p2 <- projected %>% 
-  ggplot(aes(x = V1, y= V2)) + 
-  geom_point() + 
-  ggtitle("with rounding")
 
-p1 | p2
+```
+
+
+# PCA plot for V1
+
+```{r}
+# colour by parts of optimisation (static)
+mult_releveled <- pca_v1 %>%
+  filter(info != "interpolation") 
+
+p1 <- pca_v1 %>% 
+  ggplot(aes(x = PC1, y = PC2, col = info)) +
+  geom_point() +
+  geom_point(data = mult_releveled) +
+  theme(aspect.ratio = 1) + 
+  ggtitle("PCA plot for v1")
+
+
+# colour by parts of optimisation (static)
+mult_releveled <- pca_v2 %>%
+  filter(info != "interpolation") 
+
+p2 <- pca_v2 %>% 
+  ggplot(aes(x = PC1, y = PC2, col = info)) +
+  geom_point() +
+  geom_point(data = mult_releveled) +
+  theme(aspect.ratio = 1) + 
+  ggtitle("PCA plot for v2")
+
+p1 + p2 + plot_layout(guides = "collect")
 ```
 
 
 ```{r}
-mult_object <- mult_object %>% 
-  mutate(info2 = ifelse(info %in% c("best_line_search",
-                                     "best_direction_search"), 
-                        "best", "normal"),
-         info3 = ifelse(info2 == "normal", as.character(info),
-                        str_sub(info, start = 6L, end = -1L))) %>% 
-  mutate(info3 = fct_relevel(info3, c("start", "direction_search", "line_search", "interpolation")), 
-         info2 = as.factor(info2))
-
-# colour by parts of optimisation (static)
-mult_releveled <- mult_object %>%
-  filter(info != "interpolation") 
-
-mult_object %>% 
-  ggplot(aes(x= PC1, y = PC2, col = info)) +
-  geom_point() +
-  geom_point(data = mult_releveled) +
-  theme(aspect.ratio = 1)
-```
-
-
-```{r geo-animate}
-# colour by parts of optimisation (animation)
-mult_animate <- mult_object %>%
+mult_animate_v1 <- pca_v1 %>%
   mutate(loop = ifelse(info == "start", 1, loop)) %>% 
   group_by(tries, loop, info3) %>%
   mutate(animate_id = group_indices())
 
-geo_animate <- mult_animate %>%
+mult_animate_v2 <- pca_v2 %>%
+  mutate(loop = ifelse(info == "start", 1, loop)) %>% 
+  group_by(tries, loop, info3) %>%
+  mutate(animate_id = group_indices())
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length = n + 1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+mult_path_v1 <- mult_animate_v1 %>% 
+  ungroup() %>% 
+  ggplot(aes(x = animate_id, y = index_val, col = info)) + 
+  geom_point() + 
+  theme(legend.position =  "none")
+
+mult_path_v2 <- mult_animate_v2 %>% 
+  ungroup() %>% 
+  ggplot(aes(x = animate_id, y = index_val, col = info)) + 
+  geom_point() 
+
+
+last_tries_v1 <- mult_animate_v1$tries[which.max(mult_animate_v1$tries)]
+last_tries_v2 <- mult_animate_v2$tries[which.max(mult_animate_v2$tries)]
+
+direction_v1 <- mult_animate_v1 %>% 
+  filter(tries == last_tries_v1, info %in% c("direction_search", "best_direction_search")) %>%
+  ggplot(aes(x = animate_id, y = index_val, col = info)) + 
+  geom_point() + 
+  xlim(1, max(mult_animate_v1$animate_id)) + 
+  scale_color_manual(values = c(gg_color_hue(6)[2:3], gg_color_hue(6)[5:6])) + 
+  theme(legend.position =  "none")
+
+direction_v2 <- mult_animate_v2 %>% 
+  filter(tries == last_tries_v2, info %in% c("direction_search", "best_direction_search")) %>%
+  ggplot(aes(x = animate_id, y = index_val, col = info)) + 
+  geom_point() + 
+  xlim(1, max(mult_animate_v2$animate_id)) + 
+  scale_color_manual(values = c(gg_color_hue(6)[2:3], gg_color_hue(6)[5:6])) + 
+  theme(legend.position =  "none")
+  
+
+design <- "
+  13
+  24
+  24
+"
+direction_v1 + mult_path_v1 + direction_v2 + mult_path_v2 +
+  plot_layout(design = design,  guides = "collect")
+
+
+```
+
+
+
+```{r pca-v1-animation}
+geo_animate <- mult_animate_v1 %>%
   ggplot(aes(x = PC1, y = PC2, col = info)) +
   geom_point() +
   theme(aspect.ratio = 1, 
@@ -117,8 +176,8 @@ geo_animate <- mult_animate %>%
 
 p1 <- gganimate::animate(geo_animate, fps = 2)
 
-index_val_animate <- mult_animate %>% 
-  ggplot(aes(x= animate_id, y= index_val, col = info)) + 
+index_val_animate <- mult_animate_v1 %>% 
+  ggplot(aes(x = animate_id, y = index_val, col = info)) + 
   geom_jitter(width = 0.0005) + 
   theme(aspect.ratio = 1) +
   gganimate::transition_time(animate_id) + 
@@ -130,7 +189,7 @@ a_mgif <- image_read(p1)
 b_mgif <- image_read(p2)
 
 new_gif <- image_append(c(a_mgif[1], b_mgif[1]))
-for(i in 2:100){
+for (i in 2:100) {
   combined <- image_append(c(a_mgif[i], b_mgif[i]))
   new_gif <- c(new_gif, combined)
 }
@@ -139,31 +198,38 @@ new_gif
 
 ```
 
-```{r}
-gg_color_hue <- function(n) {
-  hues = seq(15, 375, length = n + 1)
-  hcl(h = hues, l = 65, c = 100)[1:n]
+
+
+```{r pca-v2-animation}
+geo_animate <- mult_animate_v2 %>%
+  ggplot(aes(x = PC1, y = PC2, col = info)) +
+  geom_point() +
+  theme(aspect.ratio = 1, 
+        legend.position = "none") +
+  gganimate::transition_time(animate_id) +
+  gganimate::shadow_mark()
+
+p1 <- gganimate::animate(geo_animate, fps = 2)
+
+index_val_animate <- mult_animate_v2 %>% 
+  ggplot(aes(x = animate_id, y = index_val, col = info)) + 
+  geom_jitter(width = 0.0005) + 
+  theme(aspect.ratio = 1) +
+  gganimate::transition_time(animate_id) + 
+  gganimate::shadow_mark()
+
+p2 <- gganimate::animate(index_val_animate, fps = 2)
+
+a_mgif <- image_read(p1)
+b_mgif <- image_read(p2)
+
+new_gif <- image_append(c(a_mgif[1], b_mgif[1]))
+for (i in 2:100) {
+  combined <- image_append(c(a_mgif[i], b_mgif[i]))
+  new_gif <- c(new_gif, combined)
 }
 
-mult_path <- mult_animate %>% 
-  ungroup() %>% 
-  ggplot(aes(x= animate_id, y= index_val, col = info)) + 
-  geom_point()
-  #facet_zoom(x = (tries == 7 & info %in% c("direction_search",
-  #                                               "best_direction_search")))
-   #ylim = c(0.7866, 0.7875)
-
-last_tries <- mult_animate$tries[which.max(mult_animate$loop)]
-
-direction <- mult_animate %>% 
-  filter(tries == last_tries, info != "line_search") %>% 
-  ggplot(aes(x= animate_id, y= index_val, col = info)) + 
-  geom_point() + 
-  xlim(1, max(mult_animate$animate_id)) + 
-  scale_color_manual(values = c(gg_color_hue(6)[2:3], gg_color_hue(6)[5:6])) + 
-  theme(legend.position =  "none")
-  
-direction/ mult_path + 
-  plot_layout(heights = c(1, 2), guides = "collect")
+new_gif
 
 ```
+
