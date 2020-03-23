@@ -3,12 +3,13 @@ library(foreach)
 library(doFuture)
 registerDoFuture()
 plan(multicore)
-
-
 load(here::here("sherry", "data", "data.rda"))
+
+
+set.seed(123456)
 a <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
                                                 search_f = search_geodesic_latest),
-                  polish = TRUE)
+                  rescale = FALSE, polish = TRUE)
 
 
 compute_geodesic_alpha <- function(delta, polish_alpha){
