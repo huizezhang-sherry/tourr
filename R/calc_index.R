@@ -6,7 +6,7 @@
 #' @param proj the projection basis
 #' @param sphere a binary indicator whether the data need to be sphered
 
-calc_index <- function(data, proj, sphere = TRUE) {
+calc_index <- function(data, proj, sphere = FALSE) {
 
   if(sphere){
     data <- sphere_data(rescale(data))
