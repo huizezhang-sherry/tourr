@@ -9,44 +9,58 @@ load(here::here("sherry", "data", "data.rda"))
 set.seed(123456)
 a <- tourr::animate_dist(data, tour_path = guided_tour(holes(), d = 1,
                                            search_f = search_geodesic_latest),
-                         sphere = FALSE, rescale = FALSE)
+                         rescale = FALSE)
 
 ################################
 
 # functions to use
-compute_better_alpha<- function(alpha, cooling){
+compute_better_alpha <- function(alpha, cooling){
 
   animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1, alpha = alpha,
                                        cooling = cooling,
                                        search_f = search_better),
-               sphere = TRUE, rescale = FALSE) %>%
+               rescale = FALSE) %>%
     mutate(alpha = alpha) %>%
     mutate(cooling = cooling ) %>%
     mutate(method = "search_better")
 
 }
+
 compute_random_alpha <- function(alpha, cooling){
 
   animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1, alpha = alpha,
                                        cooling = cooling,
                                        search_f = search_better_random),
-               sphere = TRUE, rescale = FALSE) %>%
+               rescale = FALSE) %>%
     mutate(alpha = alpha) %>%
     mutate(cooling = cooling ) %>%
     mutate(method = "search_better_random")
 
 }
+
 compute_geodesic_alpha <- function(delta){
 
   animate_dist(data, tour_path =
                            guided_tour(holes(), d = 1, delta = delta,
                                        search_f = search_geodesic_latest),
-               sphere = TRUE, rescale = FALSE) %>%
+               rescale = FALSE) %>%
     mutate(delta = delta) %>%
     mutate(method = "geodesic")
 
+}
+
+clean_info <- function(data){
+  data %>%
+    mutate(info = fct_relevel(info, c("start",
+                                      "direction_search", "best_direction_search",
+                                      "line_search", "best_line_search",
+                                      "interpolation")),
+           info2 = as.factor(ifelse(info %in% c("best_direction_search","best_line_search"),
+                                    "best", "normal")),
+           info3 = ifelse(info2 == "normal", as.character(info),
+                          str_sub(info, start = 6L, end = -1L)))
 }
 
 
@@ -64,64 +78,43 @@ delta2 <- c(0.01, 0.02, 0.05, 0.07, 0.09,  seq(0.1, 0.9, 0.1))
 
 # simulation
 # without interruption
-better_alpha <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
+better_alpha <- foreach(i = 1:nrow(paras), .combine = "rbind") %do% {
   set.seed(123456)
   compute_better_alpha(paras$Var1[i], paras$Var2[i])
 }
 
-better_random_alpha <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
+better_random_alpha <- foreach(i = 1:nrow(paras), .combine = "rbind") %do% {
   set.seed(123456)
   compute_random_alpha(paras$Var1[i], paras$Var2[i])
 }
 
-geodesic_alpha <- foreach(i = 1:length(delta), .combine = "rbind") %do%{
+geodesic_alpha <- foreach(i = 1:length(delta), .combine = "rbind") %do% {
   set.seed(123456)
   compute_geodesic_alpha(delta[i])
-}
+} %>% clean_info()
 
-geodesic_alpha2 <- foreach(i = 1:length(delta2), .combine = "rbind") %do%{
+geodesic_alpha2 <- foreach(i = 1:length(delta2), .combine = "rbind") %do% {
   set.seed(123456)
   compute_geodesic_alpha(delta2[i])
-}
+} %>% clean_info()
 
 # with interruption
-better_alpha_new <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
+better_alpha_new <- foreach(i = 1:nrow(paras), .combine = "rbind") %do% {
   set.seed(123456)
   compute_better_alpha(paras$Var1[i], paras$Var2[i])
 }
 
-better_random_alpha_new <- foreach(i = 1:nrow(paras), .combine = "rbind") %do%{
+better_random_alpha_new <- foreach(i = 1:nrow(paras), .combine = "rbind") %do% {
   set.seed(123456)
   compute_random_alpha(paras$Var1[i], paras$Var2[i])
 }
 
 ################################
-# clean the info
 
-clean_info <- function(data){
-  data %>%
-    mutate(info = fct_relevel(info, c("start",
-                                      "direction_search", "best_direction_search",
-                                      "line_search", "best_line_search",
-                                      "interpolation")),
-           info2 = as.factor(ifelse(info %in% c("best_direction_search","best_line_search"),
-                          "best", "normal")),
-           info3 = ifelse(info2 == "normal", as.character(info),
-                          str_sub(info, start = 6L, end = -1L)))
-}
-
-geodesic_alpha <- geodesic_alpha %>% clean_info()
-geodesic_alpha2 <- geodesic_alpha2 %>% clean_info()
-
-
-
-
-################################
-
-# save(better_alpha, file = "sherry/data/better_alpha.rda")
-# save(better_random_alpha, file = "sherry/data/better_random_alpha.rda")
-# save(geodesic_alpha, file = "sherry/data/geodesic_alpha.rda")
-# save(geodesic_alpha2, file = "sherry/data/geodesic_alpha2.rda")
-# save(better_alpha_new, file = "sherry/data/better_alpha_new.rda")
-# save(better_random_alpha_new, file = "sherry/data/better_random_alpha_new.rda")
+save(better_alpha, file = "sherry/data/better_alpha.rda")
+save(better_random_alpha, file = "sherry/data/better_random_alpha.rda")
+save(geodesic_alpha, file = "sherry/data/geodesic_alpha.rda")
+save(geodesic_alpha2, file = "sherry/data/geodesic_alpha2.rda")
+save(better_alpha_new, file = "sherry/data/better_alpha_new.rda")
+save(better_random_alpha_new, file = "sherry/data/better_random_alpha_new.rda")
 
