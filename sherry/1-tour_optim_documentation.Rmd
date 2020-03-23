@@ -120,7 +120,7 @@ geo_animate <- x2_animate %>%
 p1 <- gganimate::animate(geo_animate, fps = 2)
 
 index_val_animate <- x2_animate %>% 
-  ggplot(aes(x= animate_id, y= index_val, col = info)) + 
+  ggplot(aes(x = animate_id, y = index_val, col = info)) + 
   geom_jitter(width = 0.0005) + 
   theme(aspect.ratio = 1) +
   gganimate::transition_time(animate_id) + 
@@ -132,7 +132,7 @@ a_mgif <- image_read(p1)
 b_mgif <- image_read(p2)
 
 new_gif <- image_append(c(a_mgif[1], b_mgif[1]))
-for(i in 2:100){
+for (i in 2:100) {
   combined <- image_append(c(a_mgif[i], b_mgif[i]))
   new_gif <- c(new_gif, combined)
 }
