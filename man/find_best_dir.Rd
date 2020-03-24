@@ -16,14 +16,6 @@ find_best_dir(old, index, dist = 0.01, counter = 5)
 \item{dist}{step size in radians, should be small}
 
 \item{number}{of random steps to take}
-
-\item{old}{current projection}
-
-\item{index}{interestingness index function}
-
-\item{dist}{step size in radians, should be small}
-
-\item{number}{of random steps to take}
 }
 \description{
 Starting from the current projection, pick \code{tries} random location

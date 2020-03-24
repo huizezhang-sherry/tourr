@@ -16,14 +16,6 @@ find_path_peak(old, new, index, max_dist = pi/4)
 \item{index}{interestingness index function}
 
 \item{max_dist}{maximum distance to travel along in radians}
-
-\item{old}{currention project}
-
-\item{new}{projection that gives direction to travel in}
-
-\item{index}{interestingness index function}
-
-\item{max_dist}{maximum distance to travel along in radians}
 }
 \description{
 Use \code{\link{optimize}} to find the most interesting projection amongst

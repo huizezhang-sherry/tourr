@@ -4,8 +4,7 @@
 \alias{search_polish}
 \title{Polish the searching after search_geodesic}
 \usage{
-search_polish(current, alpha_polish = 0.1, index, data,
-  max_tries = 5000, method = "linear")
+search_polish(current, grid_gap = 0.002)
 }
 \arguments{
 \item{current}{starting projection}
@@ -14,9 +13,9 @@ search_polish(current, alpha_polish = 0.1, index, data,
 
 \item{index}{interestingness index function}
 
-\item{method}{linear or geodesic nearby basis}
-
 \item{max.tries}{maximum number of basis to search}
+
+\item{method}{linear or geodesic nearby basis}
 }
 \description{
 Polish the searching after search_geodesic

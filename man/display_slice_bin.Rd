@@ -4,9 +4,20 @@
 \alias{display_slice_bin}
 \title{Display tour path with a sliced scatterplot}
 \usage{
-display_slice_bin(center = TRUE, axes = "center", half_range = NULL,
-  col = "black", pch_slice = 20, pch_other = 46, eps = NULL,
-  anchor = NULL, edges = NULL, nbin = 30, edges.col = "black", ...)
+display_slice_bin(
+  center = TRUE,
+  axes = "center",
+  half_range = NULL,
+  col = "black",
+  pch_slice = 20,
+  pch_other = 46,
+  eps = NULL,
+  anchor = NULL,
+  edges = NULL,
+  nbin = 30,
+  edges.col = "black",
+  ...
+)
 }
 \arguments{
 \item{center}{if TRUE, centers projected data to (0,0).  This pins the

@@ -5,7 +5,7 @@
 \title{calculate index value given the dataset and projection bases using holes()
 created to allow calculate index outside the whole loop}
 \usage{
-calc_index(data, proj, sphere = TRUE)
+calc_index(data, proj, sphere = FALSE)
 }
 \arguments{
 \item{data}{the initial data used}

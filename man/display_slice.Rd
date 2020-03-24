@@ -8,10 +8,21 @@
 \usage{
 animate_slice_bin(data, tour_path = grand_tour(), rescale = TRUE, ...)
 
-display_slice(center = TRUE, axes = "center", half_range = NULL,
-  col = "black", pch_slice = 20, pch_other = 46, cex_slice = 2,
-  cex_other = 1, eps = NULL, anchor = NULL, edges = NULL,
-  edges.col = "black", ...)
+display_slice(
+  center = TRUE,
+  axes = "center",
+  half_range = NULL,
+  col = "black",
+  pch_slice = 20,
+  pch_other = 46,
+  cex_slice = 2,
+  cex_other = 1,
+  eps = NULL,
+  anchor = NULL,
+  edges = NULL,
+  edges.col = "black",
+  ...
+)
 
 animate_slice(data, tour_path = grand_tour(), rescale = TRUE, ...)
 }

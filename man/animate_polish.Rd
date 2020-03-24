@@ -4,10 +4,19 @@
 \alias{animate_polish}
 \title{Animate a tour path.}
 \usage{
-animate_polish(data, tour_path = grand_tour(), display = display_xy(),
-  start = NULL, aps = 1, fps = 30, max_frames = 70,
-  rescale = TRUE, sphere = FALSE, polish = TRUE,
-  alpha_polish = 0.1, ...)
+animate_polish(
+  data,
+  tour_path = grand_tour(),
+  display = display_xy(),
+  start = NULL,
+  aps = 1,
+  fps = 30,
+  max_frames = 200,
+  rescale = TRUE,
+  sphere = FALSE,
+  alpha_polish = 0.1,
+  ...
+)
 }
 \arguments{
 \item{data}{matrix, or data frame containing numeric columns}
