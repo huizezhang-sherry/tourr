@@ -1,3 +1,25 @@
+#' Kolmogorov index.
+#'
+#' Calculates the Kolmogorov index.
+#'
+#' @keywords hplot
+#' @export
+#'
+kol <- function() {
+
+  function(mat){
+    set.seed(123)
+    mat_bin_count <- bin1(mat, c(min(mat), max(mat)), 10)$nc
+    norm_bin_count <- bin1(rnorm(nrow(mat)), c(min(mat), max(mat)), 10)$nc
+    diff <- sum((mat_bin_count - norm_bin_count)^2)/nrow(mat)
+
+    diff
+  }
+}
+
+
+
+
 #' Holes index.
 #'
 #' Calculates the holes index. See Cook and Swayne (2007)
