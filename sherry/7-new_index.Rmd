@@ -1,0 +1,68 @@
+---
+title: "7-new_index"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(ash)
+library(patchwork)
+load(here::here("sherry", "data", "data.rda"))
+source(here::here("R", "calc_index.R"))
+# load(here::here("sherry", "data", "data_mult.rda"))
+# data <- data_mult %>% dplyr::select(x1:x2, x7:x10)
+```
+
+A new index has been created in `interesting-indices.r` to compare the similarity between the projected distribution and a standard normal distribution.  Since the data has been centered to zero mean and scaled to variance = 1, it is valid to compare the distribution with a *standard* normal. Setting the number of bins to be 10 (This is a tuning parameter and we keep it as 10 for now), the number of points falling in each bin is counted in both distributions (`mat_bin_count`, `norm_bin_count`). The output statistic is the sum of squared difference over number of points: `diff <- sum((mat_bin_count - norm_bin_count)^2)/nrow(mat)` where `mat` is the projected data. Currently, the index is computed for 1-D projection, computation for 2D index is possible with 2D binning available with `ash::bin2()` in `ash` package.  
+
+
+The following part demonstrates the fact that kol index is more noisy than the holes index from the interpolation of two randomly generated bases. 
+
+
+```{r}
+set.seed(123456)
+d <- 1
+basis1 <- tourr::basis_random(ncol(data), d)
+basis2 <- tourr::basis_random(ncol(data), d)
+geo <- tourr::geodesic_path(basis1, basis2)
+
+
+cur_dist <- 0
+target_dist <- geo$dist
+pos <- seq(cur_dist, target_dist, 1/30)
+interp <- tourr:::geodesic_info(basis1, basis2)
+
+path_kol <- tibble(index_val = map_dbl(pos, 
+                                   ~tourr:::step_fraction(interp = interp, fraction = .x) %>% 
+                                     calc_kol(data = data))) %>% mutate(id = row_number())
+
+path_kol_cdf <- tibble(index_val = map_dbl(pos, 
+                                   ~tourr:::step_fraction(interp = interp, fraction = .x) %>% 
+                                     calc_kol_cdf(data = data))) %>% mutate(id = row_number())
+
+path_holes <- tibble(index_val = map_dbl(pos, 
+                                   ~tourr:::step_fraction(interp = interp, fraction = .x) %>% 
+                                     calc_index(data = data))) %>% mutate(id = row_number())
+
+p1 <- path_kol %>% ggplot(aes(x = id, y = index_val)) +
+  geom_line() +
+  geom_point() + 
+  ggtitle("Kol Index")
+
+p2 <- path_kol_cdf %>% ggplot(aes(x = id, y = index_val)) +
+  geom_line() +
+  geom_point() + 
+  ggtitle("kol_cdf Index")
+
+p3 <- path_holes %>% ggplot(aes(x = id, y = index_val)) +
+  geom_line() +
+  geom_point() + 
+  ggtitle("Holes Index")
+
+p1 | p2 | p3
+```
+
