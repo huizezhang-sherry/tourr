@@ -24,29 +24,46 @@ The following part demonstrates the fact that kol index is more noisy than the h
 
 
 ```{r}
+noise <- data %>% dplyr::select(-x2)
+
 set.seed(123456)
 d <- 1
 basis1 <- tourr::basis_random(ncol(data), d)
 basis2 <- tourr::basis_random(ncol(data), d)
+
+basis1 <- matrix(c(1,rep(0, 3)))
+basis2 <- matrix(c(rep(0, 3), 1))
 geo <- tourr::geodesic_path(basis1, basis2)
 
 
 cur_dist <- 0
 target_dist <- geo$dist
-pos <- seq(cur_dist, target_dist, 1/30)
+pos <- seq(cur_dist, target_dist, 1/100)
 interp <- tourr:::geodesic_info(basis1, basis2)
+
+# path_kol <- tibble(index_val = map_dbl(pos, 
+#                                    ~tourr:::step_fraction(interp = interp, fraction = .x) %>% 
+#                                      calc_kol(data = data))) %>% mutate(id = row_number())
+# 
+# path_kol_cdf <- tibble(index_val = map_dbl(pos, 
+#                                    ~tourr:::step_fraction(interp = interp, fraction = .x) %>% 
+#                                      calc_kol_cdf(data = data))) %>% mutate(id = row_number())
+# 
+# path_holes <- tibble(index_val = map_dbl(pos, 
+#                                    ~tourr:::step_fraction(interp = interp, fraction = .x) %>% 
+#                                      calc_index(data = data))) %>% mutate(id = row_number())
 
 path_kol <- tibble(index_val = map_dbl(pos, 
                                    ~tourr:::step_fraction(interp = interp, fraction = .x) %>% 
-                                     calc_kol(data = data))) %>% mutate(id = row_number())
+                                     calc_kol(data = noise))) %>% mutate(id = row_number())
 
 path_kol_cdf <- tibble(index_val = map_dbl(pos, 
                                    ~tourr:::step_fraction(interp = interp, fraction = .x) %>% 
-                                     calc_kol_cdf(data = data))) %>% mutate(id = row_number())
+                                     calc_kol_cdf(data = noise))) %>% mutate(id = row_number())
 
 path_holes <- tibble(index_val = map_dbl(pos, 
                                    ~tourr:::step_fraction(interp = interp, fraction = .x) %>% 
-                                     calc_index(data = data))) %>% mutate(id = row_number())
+                                     calc_index(data = noise))) %>% mutate(id = row_number())
 
 p1 <- path_kol %>% ggplot(aes(x = id, y = index_val)) +
   geom_line() +
