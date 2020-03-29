@@ -60,7 +60,7 @@ origin_dt_bi %>%
   facet_wrap(vars(names), ncol = 3)
 ```
 
-# `search_geodesic()`
+# 2D projection on 2 informative variables
 
 Searching method `Search_geodesic()` is performed on `x1, x2, x8:x10` with an additional variable from `x3: x7`. The following few screenshots are taken at the end of each trial and projection pursuit are able to find the data structure in all the caese. 
 
@@ -84,6 +84,33 @@ knitr::include_graphics(here::here("sherry", "fig", "x5.png"))
 knitr::include_graphics(here::here("sherry", "fig", "x6.png"))
 knitr::include_graphics(here::here("sherry", "fig", "x7.png"))
 ```
+
+# 2D projection on 3 informative variables
+
+Searching method `Search_geodesic()` is performed on `x1, x8, x9, x10` with three additional variables choosing from `x2, x3, x4, x5, x6, x7`. Notice that the pattern in `x3` is very different from other varaibles, it is always found in the tour, while less distinct informatiove variables are less likely to be found. We could allow for sequential step so that the variables found could be put aside in the next tour. i.e. with `x1: x4, x8:x10`, `x3` is found first, then run the tour again with all the other variables other than `x3`. See the following examples: 
+
+1) `x2, x3, x4`: `x3` is recognised while `x2` and `x4` are mixed 
+
+
+```{r echo = FALSE}
+knitr::include_graphics(here::here("sherry", "fig", "234.png"))
+```
+
+
+2) `x2, x5, x6`: without `x3`, `x5` and `x6` are more distinct and thus found 
+
+```{r echo = FALSE}
+knitr::include_graphics(here::here("sherry", "fig", "256.png"))
+```
+
+
+3) `x3, x5, x6`: when `x3` is added back, the tour can't find `x5, x6` again
+
+```{r echo = FALSE}
+knitr::include_graphics(here::here("sherry", "fig", "356.png"))
+```
+
+
 
 
 # PCA plot and index trace plot

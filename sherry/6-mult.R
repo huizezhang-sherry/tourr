@@ -25,7 +25,7 @@ data_mult <- tibble::tibble(x1 = x1, x2 = x2, x3 = x3,
 # A two dimensional projection will be better!
 run_geodesic <- function(var){
   set.seed(12345)
-  mult_geodesic <- data_mult[,c(1,2,var,8,9,10)] %>%
+  mult_geodesic <- data_mult[,c(1,var,8,9,10)] %>%
     animate_xy(tour_path = guided_tour(holes(), d = 2,
                                        search_f = search_geodesic_latest),
                rescale = FALSE)
@@ -34,6 +34,8 @@ run_geodesic <- function(var){
 }
 
 
+################################
+# PCA and index tracing plot
 pca <- foreach::foreach(i  = 1:nrow(mult_geodesic), .combine = "rbind") %do% {
   t(c(mult_geodesic$basis[[i]]))
 }
