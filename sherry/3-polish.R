@@ -4,16 +4,37 @@ library(doFuture)
 registerDoFuture()
 plan(multicore)
 load(here::here("sherry", "data", "data.rda"))
+load(here::here("sherry", "data", "data_mult.rda"))
 
 
 set.seed(123456)
-a <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
+polish_holes <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
                                                 search_f = search_geodesic_latest),
-                  rescale = FALSE, polish = TRUE)
+                  rescale = FALSE, polish = TRUE,
+                  nloop = 20, polish_alpha = 0.005)
+
+####################################
+set.seed(123456)
+polish_holes_mult <- animate_dist(data_mult[,c(1,2,7:10)], tour_path = guided_tour(holes(), d = 2,
+                                                search_f = search_geodesic_latest),
+                  rescale = FALSE, polish = TRUE,
+                  nloop = 30, polish_alpha = 0.05)
 
 
-a %>% tail(15)
-print(a$basis %>% tail(10))
+####################################
+# currently only for holes index - I have problem using the index() function inside the generator
+set.seed(123456)
+kol <- animate_dist(data, tour_path = guided_tour(kol_cdf(), d = 1,
+                                                  search_f = search_geodesic_latest),
+                    rescale = FALSE, polish = TRUE)
+
+
+polish <- kol %>% filter(info == "polish") %>% pull(basis) # the first one is the ending basis
+
+####################################
+
+save(polish_holes, file = "sherry/data/polish_holes.rda")
+save(polish_holes_mult, file = "sherry/data/polish_holes_mult.rda")
 
 
 # old polish things

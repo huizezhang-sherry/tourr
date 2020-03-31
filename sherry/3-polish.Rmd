@@ -3,6 +3,8 @@ title: "3-polish"
 author: "Huize Zhang"
 date: "25/02/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -11,6 +13,11 @@ library(tidyverse)
 
 load(here::here("sherry", "data", "geodesic_polished.rda"))
 load(here::here("sherry", "data", "geodesic_alpha2.rda"))
+load(here::here("sherry", "data", "data.rda"))
+load(here::here("sherry", "data", "data_mult.rda"))
+load(here::here("sherry", "data", "polish_holes.rda"))
+load(here::here("sherry", "data", "polish_holes_mult.rda"))
+
 ```
 
 ## Preliminary 
@@ -44,9 +51,75 @@ geodesic_interp %>%
 Adding the polish step doesn't find a better basis for all the step_polish value and all the alpha value. This makes me want to understand more on how the ending interpolation bases locate for different alpha value. 
 
 
+## Version 2
+
+A polishing procedure is implemented for the final projection in 1D projection. The polishing step is described as follows: 
+
+1. Set `grid_gap = 0.002` and `grid_vec <- c(-2, -1, 0, 1, 2) * grid_gap`
+2. Apply this to all the element of the basis to form a grid.
+3. Calculate the index value for each combination and output the basis with the largest index_val
+4. repeat 1-3 for 10 times
+
+This grid-based searching approach is not suitable for high dimensional data because grid searching sets the grid in a cubic while the sampling space in our case is a sphere.
+
+A better approach is to prescribe an angle that determines a radius of the searching sphere. This angle-based polishing is implemented in version 3
 
 
+## Version 3
 
+The new `search_polish()` function 
+
+Given the last basis (current) from tour and interpolation, `search_polish()` looks for bases nearby with higher index value. 
+
+1. `polish_alpha` defines how far the neighbourhood from the current basis and `iter` defines the number of sample to take within the neighbourhood. 
+2. Once the nearby bases are generated, the corresponding `index_val` are computed and compared with `cur_index`. 
+3. The basis with the largest `index_val` become the "current" basis in the next round. 
+4. Repeat 2-3 for `nloop` number of times. 
+
+
+### Examples
+
+1) 1D projection with `x1, x2, x8: x10` using `holes()` index
+
+```{r eval = FALSE}
+set.seed(123456)
+polish_holes <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
+                                                search_f = search_geodesic_latest),
+                  rescale = FALSE, polish = TRUE, nloop = 20, polish_alpha = 0.005)
+```
+
+```{r}
+options(pillar.sigfig = 7)
+polish_holes %>% filter(info == "polish")
+  
+#polish_holes %>% filter(info == "polish") %>% pull(basis)
+```
+
+
+2) 2D projection with `x1, x2, x7: x10` using `holes()` index
+
+```{r eval =FALSE}
+set.seed(123456)
+polish_holes_mult <- animate_dist(data_mult[,c(1,2,7:10)], tour_path = guided_tour(holes(), d = 2,
+                                                search_f = search_geodesic_latest),
+                  rescale = FALSE, polish = TRUE, nloop = 30, polish_alpha = 0.05)
+```
+
+
+```{r}
+polish_holes_mult %>% filter(info == "polish") 
+#polish_holes_mult %>% filter(info == "polish") %>% pull(basis)
+```
+
+ToDo: 
+
+1. Programming issue with accessing `index()` 
+
+Currently, the `index()` function is declared inside the `generator()` and I don't know how to programmatically make it available in `search_polish()` - which is a function NOT part of the `guided_tour()` process. Also, we probably don't want to specify `holes()` twice inside the `animate_dist()`. 
+
+2. searching scheme
+
+We could think about adding a more structured searching scheme with cooling rate or more use more advanced algorithm but playing around with parameters: `polish_alpha` and `nloop` would give a pretty good result. Thus don't think it is necessary.
 
 
 
