@@ -34,8 +34,8 @@ calc_kol <- function(data, proj, sphere = FALSE) {
   mat <- as.matrix(data) %*% proj
 
   set.seed(123)
-  mat_bin_count <- bin1(mat, c(min(mat), max(mat)), 10)$nc
-  norm_bin_count <- bin1(rnorm(nrow(mat)), c(min(mat), max(mat)), 10)$nc
+  mat_bin_count <- ash::bin1(mat, c(min(mat), max(mat)), 10)$nc
+  norm_bin_count <- ash::bin1(rnorm(nrow(mat)), c(min(mat), max(mat)), 10)$nc
   diff <- sum((mat_bin_count - norm_bin_count)^2)/nrow(mat)
 
   diff

@@ -9,8 +9,8 @@ kol <- function() {
 
   function(mat){
     set.seed(123)
-    mat_bin_count <- bin1(mat, c(min(mat), max(mat)), 20)$nc
-    norm_bin_count <- bin1(rnorm(nrow(mat)), c(min(mat), max(mat)), 20)$nc
+    mat_bin_count <- ash::bin1(mat, c(min(mat), max(mat)), 20)$nc
+    norm_bin_count <- ash::bin1(rnorm(nrow(mat)), c(min(mat), max(mat)), 20)$nc
     diff <- sum((mat_bin_count - norm_bin_count)^2)/nrow(mat)
 
     diff
@@ -20,8 +20,10 @@ kol <- function() {
 kol_cdf <- function() {
 
   function(mat){
+    browser()
     set.seed(123)
     norm <- rnorm(nrow(mat))
+
 
     # ecdf_mat <- ecdf(mat)
     # ecdf_norm <- ecdf(norm)
