@@ -118,8 +118,11 @@ animate_polish <- function(data, tour_path = grand_tour(), display = display_xy(
   cat("start polishing \n")
   current_best <- record %>% filter(info == "interpolation") %>% tail(1)
   current <- current_best$basis[[1]]
+  data <<- data
 
-  target <- search_polish(current, grid_gap = 0.02)
+  target <- search_polish(current, ...)
+  record_temp <- target %>% dplyr::select(-c(alpha, id))
+  record <<-  record %>% bind_rows(record_temp) %>% mutate(id = row_number())
 
   return(record)
 }

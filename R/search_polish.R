@@ -1,44 +1,45 @@
 #' Polish the searching after search_geodesic
 #'
 #' @param current starting projection
-#' @param alpha_polish maximum distance to travel (currently ignored)
-#' @param index interestingness index function
-#' @param max.tries maximum number of basis to search
-#' @param method linear or geodesic nearby basis
+#' @param polish_alpha maximum distance to travel
+#' @param iter number of sample basis to take in the sphere
+#' @param nloop number of time the polish process get executed
 #' @keywords optimize
-search_polish <- function(current,grid_gap = 0.002){
-  #browser()
-  i = 1
-  cur_val <- calc_index(current, data = data)
+search_polish <- function(current, polish_alpha = 0.05, iter = 100, nloop = 10, polish_cooling = 0.9, ...){
 
-  while (i <= 10) {
-    grid_vec <- c(-2, -1, 0, 1, 2) * grid_gap
-    grid <- c()
-    for (j in 1:nrow(current)) {
-      grid <- append(grid, grid_vec + current[j,])
+  cur_index <- calc_index(current, data = data)
+  record_temp <- tibble::tibble(basis = list(current), index_val = cur_index,
+                                loop = 0, info = "polish")
+
+  i <- 1
+
+  while (i < nloop) {
+
+    #polish_alpha <-  polish_alpha * polish_cooling
+    alpha_seq <- seq(0, polish_alpha, by = polish_alpha/10)
+    iter_seq <- seq(1, iter, by = 1)
+    grid <- expand.grid(alpha_seq, iter_seq)
+
+
+    polish <- map2_dfr(grid$Var1, grid$Var2, ~tibble(basis = list(basis_nearby(current, alpha = .x))), .id = "id") %>%
+      mutate(index_val = map_dbl(basis, ~calc_index(.x, data = data)),
+             alpha = grid$Var1, loop = i, info = "polish")
+
+    better_row <- polish %>% filter(index_val > cur_index,
+                                    index_val  == max(index_val))
+
+    if (nrow(better_row) == 1) {
+      record_temp <- record_temp %>% bind_rows(better_row)
+      current <- better_row$basis[[1]]
+      cur_index <- better_row$index_val
+      cat("better basis found, index_val = ", cur_index, ", i = ", i, "\n")
     }
-
-    temp <- matrix(grid, nrow = 5,ncol = 5, byrow = FALSE) %>% as_tibble() %>% expand.grid()
-
-    sample <- temp %>% mutate(id = row_number()) %>% nest(V1:V5) %>% rename(basis = data) %>%
-      mutate(index_val = map_dbl(.x = basis, ~calc_index(t(as.matrix(.x)), data = data))) %>%
-      unnest(basis)
-
-    cand <- matrix(sample[which.max(sample$index_val),] %>% dplyr::select(V1:V5) %>% as.numeric())
-    cand_val <- calc_index(cand, data = data)
-
-    if (cand_val > cur_val){
-      current <- cand
-    }
-
-    record_temp <- tibble(basis = list(current),
-                          index_val = calc_index(current, data = data),
-                          info = "polish")
-
-    record <<- record %>% bind_rows(record_temp)
 
     i <- i + 1
+
   }
 
+  record_temp
 
 }
+
