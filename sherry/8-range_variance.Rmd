@@ -1,0 +1,107 @@
+---
+title: "8-range_variance"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+
+load(here::here("sherry", "data", "range.rda"))
+load(here::here("sherry", "data", "variation.rda"))
+load(here::here("sherry", "data", "sim_holes.rda"))
+```
+
+This documents aims to record the experiment on estimating the range and variance of the index function. 
+
+## Estimate the range 
+
+Using the data with `x1, x2, x7: x10` and interpolate between a random basis to the theoretical best `matrix(c(0, 1, 0, 0, 0))`. 
+
+```{r}
+range_processed <- range %>%
+  dplyr::select(-id) %>%
+  pivot_longer(kol:hole, names_to = "index",values_to = "value") %>%
+  group_by(group, index) %>%
+  mutate(range = diff(range(value)), # the diff from largest to smallest
+         id = paste0(group, index)) %>%
+  ungroup() %>%
+  filter(!duplicated(id))
+
+pretty_bin <- function(x){
+  breaks <- pretty(range(x), n = nclass.FD(x), min.n = 1)
+  bwidth <- breaks[2] - breaks[1]
+  bwidth
+}
+
+range_processed %>% 
+  ggplot(aes(x = range)) +
+  geom_histogram(aes(y = ..ncount..),binwidth = function(x) pretty_bin(x)) +
+  geom_density(aes(y = ..ndensity..)) +
+  facet_wrap(vars(index), scales = "free_x")
+
+range_processed %>% 
+  group_by(index) %>%
+  summarise(mean = mean(value), sd = sd(value))
+```
+
+
+
+## Estimate the variation 
+
+Using a noisy data that doesn't have any structure: `noise <- data %>% dplyr::select(-x2)`, different projections should have very close `index_val` (thus very close beginning and ending `index_val` - see `.R` file). `index_val` on the interpolation paths are also collected. Variation is defined differently in the next two chunks: 
+
+
+- Chunk 1: The **range** on different interpolation paths reflects the **variation** of each index function. 
+
+- Chunk 2: **pointwise difference** reflects the **variation** of the index function
+
+Personally prefer the second definition because the peak and trough don't necessarily occur in the near neighbourhood and pointwise different would be more useful to estimate the max using extreme value theory. 
+
+```{r overal-diff}
+variation_processed <- variation %>%
+  dplyr::select(-id) %>%
+  pivot_longer(kol:hole, names_to = "index",values_to = "value") %>%
+  group_by(group, index) %>%
+  mutate(range = diff(range(value)), # the diff from largest to smallest
+         id = paste0(group, index)) %>%
+  ungroup() %>%
+  filter(!duplicated(id))
+
+variation_processed %>% 
+  ggplot(aes(x = range)) +
+  geom_histogram(aes(y = ..ncount..),binwidth = function(x) pretty_bin(x)) +
+  geom_density(aes(y = ..ndensity..)) +
+  facet_wrap(vars(index), scales = "free_x")
+
+variation_processed %>% 
+  group_by(index) %>%
+  summarise(mean = mean(value), sd = sd(value))
+```
+
+```{r pointwise-diff} 
+variation_pointwise <- variation %>%
+  group_by(group) %>%
+  mutate(kol = c(NA, diff(kol)),
+         kol_cdf = c(NA, diff(kol_cdf)),
+         hole = c(NA, diff(hole))) %>%
+  pivot_longer(kol:hole, names_to = "index", values_to = "value")
+
+variation_pointwise %>% 
+  filter(!is.na(value)) %>%
+  group_by(index) %>%
+  summarise(smoothness = sd(value)/abs(mean(value)))
+
+variation_pointwise %>%
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  facet_wrap(vars(index), scales = "free_x")
+```
+
+
+
+
+

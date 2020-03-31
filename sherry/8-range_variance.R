@@ -1,38 +1,51 @@
 load(here::here("sherry", "data", "data.rda"))
 load(here::here("sherry", "data", "data_mult.rda"))
-# load(here::here("sherry", "data", "data_mult.rda"))
-# data <- data_mult %>% dplyr::select(x1:x2, x7:x10)
 
+library(tidyverse)
 library(foreach)
 
-set.seed(123456)
-d <- 1
-basis1 <- basis_random(ncol(data), d)
-basis2 <- basis_random(ncol(data), d)
-geo <- geodesic_path(basis1, basis2)
-cur_dist <- 0
-target_dist <- geo$dist
-pos <- seq(cur_dist, target_dist, 1/150)
-interp <- geodesic_info(basis1, basis2)
-path <- tibble(index_val = map_dbl(pos, ~step_fraction(interp = interp,fraction = .x) %>% calc_kol(data = data))) %>% mutate(id = row_number())
-path %>% ggplot(aes(x = id, y = index_val)) +
-  geom_line() +
-  geom_point()
+#################################
+# simulate the interpolation path on non-structure data to see variation of each index
+noise <- data %>% dplyr::select(-x2)
+
+sim_variation <- function(i){
+
+  set.seed(1234 + i)
+
+  basis1 <- basis_random(4,1)
+  basis2 <- basis_random(4,1)
+
+  geo <- geodesic_path(basis1, basis2)
+  interp <- geodesic_info(basis1, basis2)
+
+  cur_dist <- 0
+  target_dist <- geo$dist
+  pos <- seq(cur_dist, target_dist, 1/100)
+
+  path <- tibble(basis = map(pos, ~step_fraction(interp, .x))) %>%
+    mutate(kol = map_dbl(basis, ~calc_kol(proj = .x, data = noise)),
+           kol_cdf = map_dbl(basis, ~calc_kol_cdf(proj = .x, data = noise)),
+           hole = map_dbl(basis, ~calc_index(proj = .x, data = noise)),
+           id = row_number())
+
+  path
+
+}
+
+variation <- map_dfr(1:1000, sim_variation) %>%
+  mutate(i = ifelse(id == 1, 1, 0), group = cumsum(i)) %>%
+  dplyr::select(-i)
 
 
-path <- tibble(index_val = map_dbl(pos, ~step_fraction(interp = interp,fraction = .x) %>% calc_index(data = data))) %>% mutate(id = row_number())
-path %>% ggplot(aes(x = id, y = index_val)) +
-  geom_line() +
-  geom_point()
+#################################
+# simulate the interpolation path with ending projection at the theoretical structure matrix to see the range of each index
 
-
-
-sim_rand_diff <- function(i){
+sim_range <- function(i){
 
   set.seed(1234 + i)
 
   basis1 <- basis_random(5,1)
-  basis2 <- basis_random(5,1)
+  basis2 <- matrix(c(0, 1, 0, 0, 0))
 
   geo <- geodesic_path(basis1, basis2)
   interp <- geodesic_info(basis1, basis2)
@@ -51,19 +64,20 @@ sim_rand_diff <- function(i){
 
 }
 
-sim <- map_dfr(1:1000, sim_rand_diff)
-
-
-index_random_path <- sim %>% mutate(i = ifelse(id == 1, 1, 0),
-                                    group = cumsum(i)) %>%
+range <- map_dfr(1:1000, sim_range) %>%
+  mutate(i = ifelse(id == 1, 1, 0), group = cumsum(i)) %>%
   dplyr::select(-i)
 
-end <- index_random_path %>%
+
+
+#################################
+# start and end of the first simulation are very close because the noise data doesn't have a structure
+end <- range %>%
   mutate(id_lead = lead(id,default = 1)) %>%
   filter(id_lead == 1) %>%
   rename(end.kol = kol, end.kol_cdf = kol_cdf, end.hole = hole)
 
-start <- index_random_path %>%
+start <- range %>%
   filter(id == 1) %>%
   rename(start.kol = kol, start.kol_cdf = kol_cdf, start.hole = hole)
 
@@ -98,23 +112,17 @@ path %>% ggplot(aes(x = range)) +
 path %>% group_by(index) %>%
   summarise(mean = mean(range), sd = sd(range))
 
+
 #################################
 
-index_diff <- index_random_path %>%
-  group_by(group) %>%
-  mutate(kol = c(NA, diff(kol)),
-         kol_cdf = c(NA, diff(kol_cdf)),
-         hole = c(NA, diff(hole))) %>%
-  pivot_longer(kol:hole, names_to = "index", values_to = "value")
 
-index_diff %>% filter(!is.na(value)) %>% group_by(index) %>%
-  summarise(smoothness = sd(value)/abs(mean(value)))
+library(extRemes)
+range_hole <- range %>% filter(index == "hole") %>% pull(range)
 
-index_diff %>%
-  ggplot(aes(x = value)) +
-  geom_histogram() +
-  facet_wrap(vars(index), scales = "free_x")
+fit0 <- fevd(range_hole)
+plot(fit0)
 
+fit1 <- fevd(range_hole)
 
 
 #################################
@@ -129,46 +137,19 @@ compute_sim_holes <- function(){
 }
 
 
-
 sim_holes <- foreach(i = 1: 1000, .combine = "rbind") %do% {
   compute_sim_holes()
 }
 
 
-
 sim_holes %>%
   summarise(mean = mean(index_val), sd = sd(index_val))
 
-#################################
-range <- index_random_path %>%
-  dplyr::select(-id) %>%
-  pivot_longer(kol: hole, names_to = "index",values_to = "value") %>%
-  group_by(group, index) %>%
-  mutate(range = diff(range(value)),
-         id = paste0(group, index)) %>%
-  ungroup() %>%
-  filter(!duplicated(id))
-
-range %>%
-  ggplot(aes(x = range)) +
-  geom_histogram() +
-  facet_wrap(vars(index), scales = "free_x")
-
-range %>% group_by(index) %>%
-  summarise(mean = mean(value), sd = sd(value))
-
-library(extRemes)
-range_hole <- range %>% filter(index == "hole") %>% pull(range)
-
-fit0 <- fevd(range_hole)
-plot(fit0)
-
-fit1 <- fevd(range_hole)
-
 
 
 #################################
-save(index_random_path, file = "sherry/data/index_random_path.rda")
+save(variation, file = "sherry/data/variation.rda")
+save(range, file = "sherry/data/range.rda")
 save(sim_holes, file = "sherry/data/sim_holes.rda")
 
 
