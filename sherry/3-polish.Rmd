@@ -71,10 +71,11 @@ The new `search_polish()` function
 
 Given the last basis (current) from tour and interpolation, `search_polish()` looks for bases nearby with higher index value. 
 
-1. `polish_alpha` defines how far the neighbourhood from the current basis and `iter` defines the number of sample to take within the neighbourhood. 
-2. Once the nearby bases are generated, the corresponding `index_val` are computed and compared with `cur_index`. 
-3. The basis with the largest `index_val` become the "current" basis in the next round. 
-4. Repeat 2-3 for `nloop` number of times. 
+1. `polish_alpha` defines the angle to move from the current basis to a randomly generated basis in percentage.  `iter` defines the number of randomly generated sample to take. 
+2. Form a grid value of `alpha_seq <- seq(0, polish_alpha, by = polish_alpha/10)` and generate `iter` number of bases for each `alpha` in `alpha_seq` (thus both inside and on the boundary)
+3. Once the nearby bases are generated, compute the corresponding `index_val` and compare with `cur_index`. 
+4. The basis with the largest `index_val` become the "current" basis in the next round. 
+5. Repeat 2-4 for `nloop` number of times. 
 
 
 ### Examples
