@@ -128,51 +128,48 @@ compute_sim_holes <- function(){
   a %>% filter(info == "interpolation") %>% tail(1) %>% mutate(index = "holes")
 }
 
-# compute_sim_kol <- function(){
-#
-#   a <- tourr::animate_dist(data, tour_path = guided_tour(kol(), d = 1,
-#                                                          search_f = search_geodesic_latest),
-#                            rescale = FALSE)
-#
-#   a %>% filter(info == "interpolation") %>% tail(1) %>% mutate(index = "kol")
-# }
-#
-# compute_sim_kol_cdf <- function(){
-#
-#   a <- tourr::animate_dist(data, tour_path = guided_tour(kol_cdf(), d = 1,
-#                                                          search_f = search_geodesic_latest),
-#                            rescale = FALSE)
-#
-#   a %>% filter(info == "interpolation") %>% tail(1) %>% mutate(index = "kol_cdf")
-# }
 
 
 sim_holes <- foreach(i = 1: 1000, .combine = "rbind") %do% {
   compute_sim_holes()
 }
-save(sim_holes, file = "sherry/data/sim_holes.rda")
-
-
-# sim_kol <- foreach(i = 1: 1000, .combine = "rbind") %do% {
-#   compute_sim_kol()
-# }
-#
-# sim_kol_cdf <- foreach(i = 1: 1000, .combine = "rbind") %do% {
-#   compute_sim_kol_cdf()
-# }
-
-
 
 
 
 sim_holes %>%
   summarise(mean = mean(index_val), sd = sd(index_val))
 
+#################################
+range <- index_random_path %>%
+  dplyr::select(-id) %>%
+  pivot_longer(kol: hole, names_to = "index",values_to = "value") %>%
+  group_by(group, index) %>%
+  mutate(range = diff(range(value)),
+         id = paste0(group, index)) %>%
+  ungroup() %>%
+  filter(!duplicated(id))
+
+range %>%
+  ggplot(aes(x = range)) +
+  geom_histogram() +
+  facet_wrap(vars(index), scales = "free_x")
+
+range %>% group_by(index) %>%
+  summarise(mean = mean(value), sd = sd(value))
+
+library(extRemes)
+range_hole <- range %>% filter(index == "hole") %>% pull(range)
+
+fit0 <- fevd(range_hole)
+plot(fit0)
+
+fit1 <- fevd(range_hole)
 
 
 
 #################################
 save(index_random_path, file = "sherry/data/index_random_path.rda")
+save(sim_holes, file = "sherry/data/sim_holes.rda")
 
 
 
