@@ -21,20 +21,44 @@ polish_holes_mult <- animate_dist(data_mult[,c(1,2,7:10)], tour_path = guided_to
                   nloop = 30, polish_alpha = 0.05)
 
 
+
+####################################
+# search_polish modified
+devtools::load_all()
+set.seed(123456)
+polish_modified_mult <- tourr::animate_dist(data_mult[,c(1,2,7:10)],
+                                            tour_path = guided_tour(holes(), d = 2,
+                                                                    search_f = search_geodesic_latest),
+                                            rescale = FALSE, polish = TRUE,
+                                            nloop = 30, polish_alpha = 0.05)
+
 ####################################
 # currently only for holes index - I have problem using the index() function inside the generator
-set.seed(123456)
-kol <- animate_dist(data, tour_path = guided_tour(kol_cdf(), d = 1,
-                                                  search_f = search_geodesic_latest),
-                    rescale = FALSE, polish = TRUE)
-
-
-polish <- kol %>% filter(info == "polish") %>% pull(basis) # the first one is the ending basis
+# set.seed(123456)
+# kol <- animate_dist(data, tour_path = guided_tour(kol_cdf(), d = 1,
+#                                                   search_f = search_geodesic_latest),
+#                     rescale = FALSE, polish = TRUE)
+#
+#
+# polish <- kol %>% filter(info == "polish") %>% pull(basis) # the first one is the ending basis
 
 ####################################
 
 save(polish_holes, file = "sherry/data/polish_holes.rda")
 save(polish_holes_mult, file = "sherry/data/polish_holes_mult.rda")
+
+# the old polish_mult_record & sim
+# polish_mult_record <- polish_holes_better_stop_mult$record
+# save(polish_mult_record, file = "sherry/data/polish_mult_record.rda")
+#
+# polish_mult_sim <- polish_holes_better_stop_mult$sim
+# save(polish_mult_sim, file = "sherry/data/polish_mult_sim.rda")
+
+polish_mult_modified_record <- polish_modified_mult$record
+save(polish_mult_modified_record, file = "sherry/data/polish_mult_modified_record.rda")
+
+polish_mult_modified_sim <- polish_modified_mult$sim
+save(polish_mult_modified_sim, file = "sherry/data/polish_mult_modified_sim.rda")
 
 
 # old polish things
