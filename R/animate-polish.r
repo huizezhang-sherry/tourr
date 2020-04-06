@@ -120,11 +120,12 @@ animate_polish <- function(data, tour_path = grand_tour(), display = display_xy(
   current <- current_best$basis[[1]]
   data <<- data
 
-  target <- search_polish(current, ...)
-  record_temp <- target %>% dplyr::select(-c(alpha, id))
-  record <<-  record %>% bind_rows(record_temp) %>% mutate(id = row_number())
 
-  return(record)
+  target <- search_polish(current, ...)
+  record_temp <- target$record_temp
+  record <- record %>% bind_rows(record_temp) %>% mutate(id = row_number())
+
+  return(list(record = record, sim = target$sim_temp))
 }
 
 rstudio_gd <- function() identical(names(dev.cur()), "RStudioGD")
