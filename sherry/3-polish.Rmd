@@ -67,7 +67,7 @@ A better approach is to prescribe an angle that determines a radius of the searc
 
 ## Version 3
 
-The new `search_polish()` function 
+### Procedure
 
 Given the last basis (current) from tour and interpolation, `search_polish()` looks for bases nearby with higher index value. 
 
@@ -80,7 +80,7 @@ Given the last basis (current) from tour and interpolation, `search_polish()` lo
 
 ### Examples
 
-1) 1D projection with `x1, x2, x8: x10` using `holes()` index
+#### 1D projection with `x1, x2, x8: x10` using `holes()` index
 
 ```{r eval = FALSE}
 set.seed(123456)
@@ -91,13 +91,25 @@ polish_holes <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
 
 ```{r}
 options(pillar.sigfig = 7)
-polish_holes %>% filter(info == "polish")
+polish_holes %>% filter(info == "polish") 
   
-#polish_holes %>% filter(info == "polish") %>% pull(basis)
+basis <- polish_holes %>% filter(info == "polish") %>% pull(basis) 
+basis_0 <- matrix(c(0, 1, 0, 0, 0))
+basis_1 <- basis %>% first()
+basis_2 <- basis %>% last()
+basis_1
+basis_2
+
+tourr:::proj_dist(basis_1, basis_2)
+tourr:::proj_dist(basis_0, basis_1)
+tourr:::proj_dist(basis_0, basis_2)
+
 ```
 
 
-2) 2D projection with `x1, x2, x7: x10` using `holes()` index
+
+
+#### 2D projection with `x1, x2, x7: x10` using `holes()` index
 
 ```{r eval =FALSE}
 set.seed(123456)
@@ -109,7 +121,21 @@ polish_holes_mult <- animate_dist(data_mult[,c(1,2,7:10)], tour_path = guided_to
 
 ```{r}
 polish_holes_mult %>% filter(info == "polish") 
-#polish_holes_mult %>% filter(info == "polish") %>% pull(basis)
+
+basis <- polish_holes_mult %>% filter(info == "polish") %>% pull(basis)
+
+basis_0 <- matrix(c(0, 1, 0, 0, 0, 0, 
+                    0, 0, 1, 0, 0, 0), nrow = 6, ncol = 2) # theoretical optimal
+basis_1 <- basis %>% first() # last basis from interpolation
+basis_2 <- basis %>% last() # last basis after polishing
+
+basis_1
+basis_2
+
+tourr:::proj_dist(basis_1, basis_2)
+tourr:::proj_dist(basis_0, basis_1)
+tourr:::proj_dist(basis_0, basis_2)
+
 ```
 
 ToDo: 
