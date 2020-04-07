@@ -4,18 +4,23 @@
 \alias{search_polish}
 \title{Polish the searching after search_geodesic}
 \usage{
-search_polish(current, grid_gap = 0.002)
+search_polish(
+  current,
+  polish_alpha = 0.05,
+  iter = 1000,
+  nloop = 10,
+  polish_cooling = 1,
+  ...
+)
 }
 \arguments{
 \item{current}{starting projection}
 
-\item{alpha_polish}{maximum distance to travel (currently ignored)}
+\item{polish_alpha}{maximum distance to travel}
 
-\item{index}{interestingness index function}
+\item{iter}{number of sample basis to take in the sphere}
 
-\item{max.tries}{maximum number of basis to search}
-
-\item{method}{linear or geodesic nearby basis}
+\item{nloop}{number of time the polish process get executed}
 }
 \description{
 Polish the searching after search_geodesic
