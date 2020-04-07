@@ -5,7 +5,7 @@
 #' @param data the initial data used
 #' @param proj the projection basis
 #' @param sphere a binary indicator whether the data need to be sphered
-
+#' @export
 calc_index <- function(data, proj, sphere = FALSE) {
 
   if(sphere){
