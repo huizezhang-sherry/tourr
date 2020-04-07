@@ -19,7 +19,7 @@ This documents aims to record the experiment on estimating the range and varianc
 
 ## Estimate the range 
 
-Using the data with `x1, x2, x7: x10` and interpolate between a random basis to the theoretical best `matrix(c(0, 1, 0, 0, 0))`. 
+Using the data with `x1, x2, x8: x10` and interpolate between a random basis to the theoretical best `matrix(c(0, 1, 0, 0, 0))`. 
 
 ```{r}
 range_processed <- range %>%

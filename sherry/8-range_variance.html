@@ -369,7 +369,7 @@ summary {
 <p>This documents aims to record the experiment on estimating the range and variance of the index function.</p>
 <div id="estimate-the-range" class="section level2">
 <h2>Estimate the range</h2>
-<p>Using the data with <code>x1, x2, x7: x10</code> and interpolate between a random basis to the theoretical best <code>matrix(c(0, 1, 0, 0, 0))</code>.</p>
+<p>Using the data with <code>x1, x2, x8: x10</code> and interpolate between a random basis to the theoretical best <code>matrix(c(0, 1, 0, 0, 0))</code>.</p>
 <pre class="r"><code>range_processed &lt;- range %&gt;%
   dplyr::select(-id) %&gt;%
   pivot_longer(kol:hole, names_to = &quot;index&quot;,values_to = &quot;value&quot;) %&gt;%
