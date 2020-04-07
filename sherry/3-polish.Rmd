@@ -18,6 +18,12 @@ load(here::here("sherry", "data", "data_mult.rda"))
 load(here::here("sherry", "data", "polish_holes.rda"))
 load(here::here("sherry", "data", "polish_holes_mult.rda"))
 
+load(here::here("sherry", "data", "polish_holes_old_mult_record.rda"))
+load(here::here("sherry", "data", "polish_holes_old_mult_sim.rda"))
+
+load(here::here("sherry", "data", "polish_mult_modified_record.rda"))
+
+
 ```
 
 ## Preliminary 
@@ -147,6 +153,70 @@ Currently, the `index()` function is declared inside the `generator()` and I don
 2. searching scheme
 
 We could think about adding a more structured searching scheme with cooling rate or more use more advanced algorithm but playing around with parameters: `polish_alpha` and `nloop` would give a pretty good result. Thus don't think it is necessary.
+
+
+## Version 3 with all the nearby bases outputted 
+
+I allow version 3 to output all the nearby bases to assess the efficiency of the sampling. The following plot shows the sampling of each loop in a panel and x-axis represents the distance between the current basis and the sampled basis. y-axi represents the index_val and the scale is different for each panel. Start from panel 1, the dot with proj_dist = 0 is the last basis from search_geodesic_latest & interpolation and 100 samples are taken at each alpha level. The point with the largest index value becomes the current point in panel 2 and this process keeps going for `nloop = 30` times. 
+
+The shape of all the points in one panel is either a cone-like or meteor-like shape and this is explanable. In the initial stage of polishing, the basis is far from the one with the highest index_val, taking random samples around it will gives some points with higher index_val and some with lower. This creates the cone-like shape in the first few panels. In the end of polishing, the current basis is almost at the peak of the mountain. Going in any direction is likely to cause a decline in the index_val and the further one goes, the lower the index_val would be. 
+
+The messages from this plot are two-fold: 
+
+1) At the initial stage of polishing, a larger alpha value is more efficient 
+2) When it coems to the end, a smaller alpha value is more likely to find a higher index_val
+
+Based on these two messages, I no longer use a vector of alpha value in the sampling of nearby basis. Rather a relatively large alpha value is used to initialise the polishing procedure and a cooling parameter to adjust. 
+
+The current `search_polish()` also implement the percentage change improvement. If the percentage change is less than 0.001, the cooling parameter will work to reduce the alpha value and continue the searching. It will end if the number of iteration > `nloop` or `polish_alpha < 0.001`.
+ 
+```{r eval = FALSE}
+set.seed(123456)
+polish_holes_old_mult <- tourr::animate_dist(data_mult[,c(1,2,7:10)], tour_path = guided_tour(holes(), d = 2,
+                                                                                              search_f = search_geodesic_latest),
+                                             rescale = FALSE, polish = TRUE,
+                                             nloop = 30, polish_alpha = 0.05)
+
+polish_holes_old_mult_record <- polish_holes_old_mult$record
+polish_holes_old_mult_sim <- polish_holes_old_mult$sim
+```
+ 
+
+```{r}
+polish <- polish_holes_old_mult_record %>% filter(info == "polish")
+
+sim <- polish_holes_old_mult_sim %>%
+  mutate(basis_id = case_when(loop == 0 ~ 1, 
+                              between(loop, 1, 16) ~ loop, 
+                              loop > 16 ~ 16), 
+         proj_dist = map2_dbl(basis, basis_id, ~tourr::proj_dist(polish$basis[[.y]], .x)))
+
+sim %>%
+  ggplot(aes(x = proj_dist, y = index_val, col = as.factor(alpha))) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(vars(loop), scales = "free_y")
+
+```
+
+After these modification, search_polish is working well.
+
+```{r eval = FALSE}
+# search_polish modified
+set.seed(123456)
+polish_modified_mult <- tourr::animate_dist(data_mult[,c(1,2,7:10)],
+                                            tour_path = guided_tour(holes(), d = 2,
+                                                                    search_f = search_geodesic_latest),
+                                            rescale = FALSE, polish = TRUE,
+                                            nloop = 30, polish_alpha = 0.05)
+
+polish_mult_modified_record <- polish_modified_mult$record
+polish_mult_modified_sim <- polish_modified_mult$sim
+```
+
+
+```{r}
+polish_mult_modified_record %>% filter(info == "polish")
+```
 
 
 
