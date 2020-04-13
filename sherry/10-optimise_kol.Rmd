@@ -1,0 +1,120 @@
+---
+title: "10-optimise_kol"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+load(here::here("sherry","data", "data.rda"))
+load(here::here("sherry","data", "kol_geodesic.rda"))
+load(here::here("sherry","data", "kol_better.rda"))
+load(here::here("sherry","data", "kol_cdf_better.rda"))
+load(here::here("sherry","data", "kol_cdf_better_polish.rda"))
+
+source(here::here("sherry", "indices.r"))
+```
+
+This file documents some experiments of optimising more complex indices i.e. `kol` and `kol_cdf`. The creation of these indices can be found in `7-new_index.Rmd` and `pp-optim/Meeting4_15-23-20.html`. My experiment shows that 
+
+- A combination of`serach_better` and `search_polish` works better for more complex indices 
+- `kol_cdf` tends to have more stable range in the index_val than `kol`.
+ 
+ 
+## 1. `kol` index  with `search_geodesic` without polishing 
+
+With a geodesic search, the optimisation fails to find a basis near the theoretical best basis:  `matrix(c(0, 1, 0, 0, 0))` and the distance is quite large (a normal proj_dist between the final basis and the theoretical basis is around point something). Also the change in the index_val is drastic: see the `calc_kol` result for `basis_0` and `last_one[[1]]`. This provides two insights: 
+
+- `search_geodesic` is not an optimal solution for more complex indices
+- `kol` index, on itself, is not a stable index - pre-processing step like scaling or normalisation will be needed for it to produce better result.
+
+
+```{r eval = FALSE}
+set.seed(123456)
+kol_geodesic <- tourr::animate_dist(data, tour_path = guided_tour(kol(), d = 1,
+                                                          search_f = search_geodesic_latest),
+                                             rescale = FALSE, polish = FALSE)
+```
+
+```{r}
+last_one <- kol_geodesic %>% filter(info == "interpolation") %>% pull(basis) %>% tail(1)
+
+kol_geodesic %>% filter(info == "interpolation") %>% mutate(id = row_number())  %>%
+  ggplot(aes(x = id, y = index_val)) + geom_line()
+
+basis_0 <- matrix(c(0, 1, 0, 0, 0))
+calc_kol(basis_0, data = data)
+calc_kol(last_one[[1]], data = data)
+
+tourr::proj_dist(last_one[[1]], basis_0)
+```
+
+
+## 2. `kol()` index with `serach_better` without polishing
+
+`search_better` is doing a great job on the optimisation - the tracing plot looks smooth and the final basis is near the theoretical best. Thus, `serach_better` seems to be a better routine for `kol()` index than `search_geodesic`. 
+
+```{r eval = FALSE}
+set.seed(123456)
+kol_better <- tourr::animate_dist(data, tour_path = guided_tour(kol(), d = 1,
+                                                          search_f = search_better),
+                            rescale = FALSE, polish = FALSE)
+```
+
+```{r}
+last_one <- kol_better %>% filter(info == "interpolation") %>% pull(basis) %>% tail(1)
+kol_better %>% filter(info == "interpolation") %>% mutate(id = row_number())  %>%
+  ggplot(aes(x = id, y = index_val)) + geom_line()
+
+basis_0 <- matrix(c(0, 1, 0, 0, 0))
+calc_kol(basis_0, data = data)
+calc_kol(last_one[[1]], data = data)
+
+```
+
+
+## 3.`kol_cdf()` with `search_better` without polishing
+
+As mentioned before `kol` index is not stable, `kol_cdf` is a much steady index based on the `ks.test`. This time, the index_val is restricted in a smaller region between 0 and 1. 
+
+```{r eval = FALSE}
+set.seed(123456)
+kol_cdf_better <- tourr::animate_dist(data, tour_path = guided_tour(kol_cdf(), d = 1,
+                                                                 search_f = search_better),
+                                   rescale = FALSE, polish = FALSE)
+
+```
+
+```{r}
+last_one <- kol_cdf_better %>% filter(info == "interpolation") %>% pull(basis) %>% tail(1)
+first_one <- kol_cdf_better %>% filter(info == "interpolation") %>% pull(basis) %>% head(1)
+kol_cdf_better %>% filter(info == "interpolation") %>% mutate(id = row_number())  %>%
+  ggplot(aes(x = id, y = index_val)) + geom_line()
+
+basis_0 <- matrix(c(0, 1, 0, 0, 0))
+calc_kol_cdf(basis_0, data = data)
+calc_kol_cdf(last_one[[1]], data = data)
+calc_kol_cdf(first_one[[1]], data = data)
+
+```
+
+## 4. `kol_cdf()` with `search_better` with polishing
+
+Withe polishing step, the optimisation keeps on finding the basis with higher index value and it is getting closer to the index_val of the theoretical best.  
+
+```{r eval = FALSE}
+set.seed(123456)
+kol_cdf_better_polish <- tourr::animate_dist(data, tour_path = guided_tour(kol_cdf(), d = 1,
+                                                                     search_f = search_better),
+                                       rescale = FALSE, polish = TRUE)
+```
+
+```{r}
+kol_cdf_better_polish$record %>% filter(info %in% c("interpolation", "polish")) %>% mutate(id = row_number())  %>%
+  ggplot(aes(x = id, y = index_val)) + geom_line() + geom_point(aes(col = info))
+
+```
+
