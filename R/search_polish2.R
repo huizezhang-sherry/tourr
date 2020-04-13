@@ -52,7 +52,7 @@ search_polish2 <- function(current, polish_alpha = 0.05, index, max.tries = 5, c
     }
 
     try <- try + 1
-p
+
     cat("new polish alpha: ", polish_alpha * polish_cooling, "\n")
 
 
