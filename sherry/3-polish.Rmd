@@ -22,6 +22,7 @@ load(here::here("sherry", "data", "polish_holes_old_mult_record.rda"))
 load(here::here("sherry", "data", "polish_holes_old_mult_sim.rda"))
 
 load(here::here("sherry", "data", "polish_mult_modified_record.rda"))
+load(here::here("sherry", "data", "polish_mult_modified_sim.rda"))
 
 
 ```
@@ -157,7 +158,7 @@ We could think about adding a more structured searching scheme with cooling rate
 
 ## Version 3 with all the nearby bases outputted 
 
-I allow version 3 to output all the nearby bases to assess the efficiency of the sampling. The following plot shows the sampling of each loop in a panel and x-axis represents the distance between the current basis and the sampled basis. y-axi represents the index_val and the scale is different for each panel. Start from panel 1, the dot with proj_dist = 0 is the last basis from search_geodesic_latest & interpolation and 100 samples are taken at each alpha level. The point with the largest index value becomes the current point in panel 2 and this process keeps going for `nloop = 30` times. 
+I allow version 3 to output all the nearby bases to assess the efficiency of the sampling. The following plot shows the sampling of each loop in a panel and x-axis represents the distance between the current basis and the sampled basis. y-axis represents the index_val and the scale is different for each panel. Start from panel 1, the dot with proj_dist = 0 is the last basis from search_geodesic_latest & interpolation and 100 samples are taken at each alpha level. The point with the largest index value becomes the current point in panel 2 and this process keeps going for `nloop = 30` times. 
 
 The shape of all the points in one panel is either a cone-like or meteor-like shape and this is explanable. In the initial stage of polishing, the basis is far from the one with the highest index_val, taking random samples around it will gives some points with higher index_val and some with lower. This creates the cone-like shape in the first few panels. In the end of polishing, the current basis is almost at the peak of the mountain. Going in any direction is likely to cause a decline in the index_val and the further one goes, the lower the index_val would be. 
 
@@ -216,6 +217,22 @@ polish_mult_modified_sim <- polish_modified_mult$sim
 
 ```{r}
 polish_mult_modified_record %>% filter(info == "polish")
+
+polish <- polish_mult_modified_record %>% filter(info == "polish")
+
+sim <- polish_mult_modified_sim %>%
+  mutate(basis_id = case_when(loop == 0 ~ 1, 
+                              between(loop, 1, 16) ~ loop, 
+                              loop > 16 ~ 16), 
+         proj_dist = map2_dbl(basis, basis_id, ~tourr::proj_dist(polish$basis[[.y]], .x)))
+
+sim %>%
+  ggplot(aes(x = proj_dist, y = index_val, col = as.factor(alpha))) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(vars(loop), scales = "free_y")
+
+
+
 ```
 
 
