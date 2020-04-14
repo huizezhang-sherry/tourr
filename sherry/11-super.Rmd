@@ -1,0 +1,113 @@
+---
+title: "11-super"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(gghighlight)
+
+load(here::here("sherry/data/eco_long.rda"))
+load(here::here("sherry/data/eco_t.rda"))
+load(here::here("sherry/data/eco_sim.rda"))
+load(here::here("sherry/data/eco_t_polish.rda"))
+```
+
+We have economic data from 14 economic indicators at 22 time points across 400 simulations. 
+
+```{r}
+eco_1 <- eco_long %>% filter(sim == 1)
+
+eco_1 %>% 
+  ggplot(aes(x = t, y = value, group = sim)) + 
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(vars(var)) + 
+  xlab("t")
+
+eco_cash <- eco_long %>% filter(var == "cash")
+
+eco_cash %>% 
+  ggplot(aes(x = as.factor(t), y = value, group = sim)) + 
+  geom_line(alpha = 0.3) + 
+  geom_line(data = filter(eco_1, var == "cash"), aes(col = as.factor(sim))) + 
+  theme(legend.position = "none") + 
+  xlab("t")
+  
+```
+
+Upon last discussion with Nicolas (Meeting 1), the goal of the study is to find a lower-dimensional representation of these economic indicators that will maximise a, yet unknown, decision rule, say $Y$. Different indices could be used to identify features in the given dataset and for simplicity, the following three exercises uses the the `holes` index. [could discuss how to choose an appropriate index] The main goal is to compare how the weight for each indicator varys across time and simulation.
+
+## Comparing variation across different simulations using all time
+
+```{r}
+
+var_name <- eco_long$var %>% unique()
+
+set.seed(123456)
+sim_num <- sample(1:400, size = 40)
+
+eco_sim_clean <- eco_sim %>%
+  as_tibble() %>%
+  mutate(var = var_name) %>%
+  pivot_longer(-var, names_to = "sim", values_to = "value") %>%
+  mutate(sim = as.numeric(str_replace(sim, "V", "")),
+         sim = sim_num[sim]) %>%
+  arrange(sim)
+
+eco_sim_clean %>% 
+  ggplot(aes(x = fct_reorder(var, -value), y = value)) + 
+  geom_boxplot() + 
+  coord_flip()
+
+```
+
+
+## Comparing weights between different time using all simulation
+
+```{r}
+eco_t_clean <- eco_t %>%
+  as_tibble() %>%
+  mutate(V1 = var_name) %>%
+  rename(var = V1) %>%
+  pivot_longer(cols = -var,names_to = "t", values_to = "value") %>%
+  mutate(t = as.numeric(str_replace(t, "V", "")))
+
+
+eco_t_clean %>%
+  ggplot(aes(x = t, y = value, col = var)) +
+  geom_line() +
+  geom_point() + 
+  gghighlight(max(value) > 0.35 | min(value) < 0.2)
+```
+
+
+
+## Comparing results on different searching methods
+
+```{r}
+
+eco_t_polish_clean <- eco_t_polish %>%
+  as_tibble() %>%
+  mutate(V1 = var_name) %>%
+  rename(var = V1) %>%
+  pivot_longer(cols = -var,names_to = "t", values_to = "value") %>%
+  mutate(t = as.numeric(str_replace(t, "V", "")),
+         type = "polish")
+
+eco_t_all <- eco_t_clean %>% mutate(type = "geodesic") %>%
+  bind_rows(eco_t_polish_clean)
+
+eco_t_all %>%
+  ggplot(aes(x = t, y = value, col = type, group = interaction(type, var))) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(vars(type)) + 
+  gghighlight(max(value) > 0.35 | min(value) < 0.23, calculate_per_facet = TRUE,
+              label_key = var)
+```
+
