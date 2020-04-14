@@ -15,7 +15,6 @@
 search_polish2 <- function(current, polish_alpha = 0.05, index, max.tries = 5, cur_index = NA,
                            n_sample = 1000, polish_cooling = 1, ...){
 
-  browser()
   if (is.na(cur_index)) cur_index <- index(current)
 
   range <-  diff(range(record$index_val))
@@ -53,6 +52,8 @@ search_polish2 <- function(current, polish_alpha = 0.05, index, max.tries = 5, c
 
     try <- try + 1
 
+    polish_cooling = polish_cooling * 0.9
+    polish_alpha = polish_alpha * polish_cooling
     cat("new polish alpha: ", polish_alpha * polish_cooling, "\n")
 
 
