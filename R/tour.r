@@ -64,6 +64,7 @@ new_tour <- function(data, tour_path, start = NULL, ...) {
 
     if (cur_dist >= target_dist) {
 
+<<<<<<< HEAD
 
       ## interrupt
       if (verbose) {
@@ -99,6 +100,22 @@ new_tour <- function(data, tour_path, start = NULL, ...) {
           }
 
         }
+=======
+      # interrupt
+      row <- record %>%
+        dplyr::filter(tries == tries, info == "interpolation") %>%
+        dplyr::filter(index_val == max(!!index_val))
+
+      if(nrow(row) != 0){
+
+        proj <- row$basis[[1]]
+        max_val <- row$index_val
+        max_id <- which(record$index_val == max_val)
+
+        record <<- record %>%
+          dplyr::mutate(id = dplyr::row_number()) %>%
+          dplyr::filter(id <= max_id)
+>>>>>>> This part is the interrupt, thus should get executed whether verbose or not
       }
 
       tour_path_obj <<- tour_path(proj, data, ...)
