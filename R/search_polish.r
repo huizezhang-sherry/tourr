@@ -30,10 +30,6 @@ search_polish <- function(current, polish_alpha = 0.5, index, polish_max_tries =
       dplyr::mutate(index_val = purrr::map_dbl(basis, ~index(.x)),
                     polish_alpha = polish_alpha, tries = !! tries, info = "polish",
                     loop = try)
-<<<<<<< HEAD
-
-=======
->>>>>>> search polish documentation
 
     best_row <- polish %>% dplyr::filter(index_val == max(index_val))
 
@@ -57,10 +53,6 @@ search_polish <- function(current, polish_alpha = 0.5, index, polish_max_tries =
           cat("current basis: ", current, "cur_index: ", cur_index, "\n")
           return(list(target = current))
         }
-<<<<<<< HEAD
-=======
-
->>>>>>> search polish documentation
 
       }
 
