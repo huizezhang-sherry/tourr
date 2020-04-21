@@ -19,7 +19,10 @@ library(tidyverse)
 library(patchwork)
 
 load(here::here("vignettes", "data", "temp.rda"))
+<<<<<<< HEAD
 
+=======
+>>>>>>> search polish documentation
 load(here::here("vignettes", "data", "holes_1d_geo.rda"))
 load(here::here("vignettes", "data", "holes_1d_polish.rda"))
 load(here::here("vignettes", "data", "holes_2d_geo.rda"))
@@ -44,6 +47,10 @@ x10 <- rnorm(1000, 0, 1)
 
 data <- tibble::tibble(x1 = x1, x2 = x2, x8 = x8,
                        x9 = x9, x10 = x10) %>% purrr::map_df(scale) %>% as.matrix()
+<<<<<<< HEAD
+=======
+
+>>>>>>> search polish documentation
 #save(data, file = "vignettes/data/data.rda")
 ```
 
@@ -152,7 +159,10 @@ holes_1d_polish <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
                                            search_f =  search_polish),
                   rescale = FALSE, verbose = TRUE, start = last_basis)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> search polish documentation
 #save(holes_1d_geo, file = here::here("vignettes", "data", "holes_1d_geo.rda"))
 #save(holes_1d_polish, file = here::here("vignettes", "data", "holes_1d_polish.rda"))
 
@@ -198,7 +208,11 @@ design <- "
 
 p1 + p2 + 
   plot_layout(design = design, guides = "collect")
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> search polish documentation
 ```
 
 
@@ -209,6 +223,7 @@ set.seed(123456)
 holes_2d_geo <- animate_xy(data_mult[,c(1,2, 7:10)], tour_path = guided_tour(holes(), d = 2,
                                            search_f =  search_geodesic),
                   rescale = FALSE, verbose = TRUE)
+<<<<<<< HEAD
 
 last_basis <- holes_2d_geo %>% filter(info == "interpolation") %>% tail(1) %>% pull(basis) %>% .[[1]] 
 
@@ -218,6 +233,17 @@ holes_2d_polish <- animate_xy(data_mult[,c(1,2, 7:10)], tour_path = guided_tour(
                                            search_f =  search_polish),
                   rescale = FALSE, verbose = TRUE, start = last_basis)
 
+=======
+
+last_basis <- holes_2d_geo %>% filter(info == "interpolation") %>% tail(1) %>% pull(basis) %>% .[[1]] 
+
+devtools::load_all()
+set.seed(123456)
+holes_2d_polish <- animate_xy(data_mult[,c(1,2, 7:10)], tour_path = guided_tour(holes(), d = 2,
+                                           search_f =  search_polish),
+                  rescale = FALSE, verbose = TRUE, start = last_basis)
+
+>>>>>>> search polish documentation
 #save(holes_2d_geo, file = here::here("vignettes", "data", "holes_2d_geo.rda"))
 #save(holes_2d_polish, file = here::here("vignettes", "data", "holes_2d_polish.rda"))
 ```
@@ -260,7 +286,10 @@ design <- "
 
 p1 + p2 + 
   plot_layout(design = design, guides = "collect")
+<<<<<<< HEAD
 
+=======
+>>>>>>> search polish documentation
   
 ```
 
@@ -278,12 +307,19 @@ interrupt_no <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
                   rescale = FALSE, verbose = TRUE)
 
 #save(interrupt_no, file = here::here("vignettes", "data", "interrupt_no.rda"))
+<<<<<<< HEAD
+=======
+
+>>>>>>> search polish documentation
 devtools::load_all()
 set.seed(123456)
 interrupt_yes <- animate_dist(data, tour_path = guided_tour(holes(), d = 1,
                                            search_f =  search_better),
                   rescale = FALSE, verbose = TRUE)
+<<<<<<< HEAD
 
+=======
+>>>>>>> search polish documentation
 #save(interrupt_yes, file = here::here("vignettes", "data", "interrupt_yes.rda"))
 
 ```
