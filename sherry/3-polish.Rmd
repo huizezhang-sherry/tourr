@@ -192,11 +192,12 @@ sim <- polish_holes_old_mult_sim %>%
                               loop > 16 ~ 16), 
          proj_dist = map2_dbl(basis, basis_id, ~tourr::proj_dist(polish$basis[[.y]], .x)))
 
-sim %>%
+polish_alpha_plot <- sim %>%
   ggplot(aes(x = proj_dist, y = index_val, col = as.factor(alpha))) +
   geom_point(alpha = 0.5) +
   facet_wrap(vars(loop), scales = "free_y")
 
+ggsave(polish_alpha_plot, file = "sherry/fig/polish_alpha.png")
 ```
 
 After these modification, search_polish is working well.

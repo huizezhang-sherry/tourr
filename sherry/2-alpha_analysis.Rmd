@@ -103,11 +103,13 @@ new <- temp %>% filter(info == "new_basis") %>% mutate(id = new_id)
 
 dt <- bind_rows(start, interp, new) %>% arrange(id)
 
-dt %>% 
+interrupt_search_better_plot <- dt %>% 
   ggplot(aes(x = id, y = index_val, col = info)) + 
   geom_point() + 
   geom_line() + 
   ggtitle("search_better- default alpha = 0.5, cooling = 0.99")
+
+ggsave(interrupt_search_better_plot, file = here::here("sherry/fig/interrupt_search_better_plot.png"))
 ```
 
 The blue points are the target bases found in the search and the red path is the interpolation path. The searching are finding the target bases with higher index_val but there are points with even higher index_val on the interpolating path (see the hill shape). 

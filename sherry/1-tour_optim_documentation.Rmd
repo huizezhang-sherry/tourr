@@ -139,6 +139,8 @@ for (i in 2:100) {
 
 new_gif
 
+library(gganimate)
+anim_save(new_gif, filename = "sherry/fig/pca_tracing_plot.gif")
 ```
 
 ```{r}
