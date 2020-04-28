@@ -1,3 +1,87 @@
+chi <- function(){
+
+  function(data, proj){
+    weight = TRUE
+    lambda = 0.1
+    r = 1
+    ck = NA
+
+    if (is.na(ck[1])) {
+      # Encontrar a probabilidade de normalizacao bivariada normal sobre cada caixa radial
+      fnr <- function(x) { x * exp(-0.5 * x^2) } # veja que aqui a funcao normal padrao bivariada esta em Coordenadas Polares
+      ck  <- rep(1,40)
+      ck[1:8]   <- integrate(fnr, 0, sqrt(2*log(6))/5)$value/8
+      ck[9:16]  <- integrate(fnr, sqrt(2*log(6))/5  , 2*sqrt(2*log(6))/5)$value/8
+      ck[17:24] <- integrate(fnr, 2*sqrt(2*log(6))/5, 3*sqrt(2*log(6))/5)$value/8
+      ck[25:32] <- integrate(fnr, 3*sqrt(2*log(6))/5, 4*sqrt(2*log(6))/5)$value/8
+      ck[33:40] <- integrate(fnr, 4*sqrt(2*log(6))/5, 5*sqrt(2*log(6))/5)$value/8
+    }
+
+    x <- as.matrix(data)
+    a <- as.matrix(proj[,1])
+    b <- as.matrix(proj[,2])
+
+    n <- nrow(data)
+    z   <- matrix(0, nrow = n, ncol = 2)
+    ppi <- 0
+    pk  <- rep(0,48)
+    eta <- pi * (0:8)/36
+    delang <- 45 * pi/180
+    delr   <- sqrt(2 * log(6))/5
+    angles <- seq(0, (2 * pi), by = delang)
+    rd <- seq(0, (5 * delr), by = delr)
+    nr <- length(rd)
+    na <- length(angles)
+    j <- 1
+    while (j <= 9) {
+      # rotaciona o plano
+      aj <- a * cos(eta[j]) - b * sin(eta[j])
+      bj <- a * sin(eta[j]) + b * cos(eta[j])
+
+      # projeta os dados
+      z[,1] <- x %*% aj
+      z[,2] <- x %*% bj
+
+      # Converte coordenadas cardesianas em polares
+      r  <- sqrt(z[,1]^2 + z[,2]^2)
+      th <- atan2(z[,2],z[,1])
+
+      # Encontrar todos os angulos que sao negativos
+      ind <- which(th < 0)
+      th[ind] <- th[ind] + 2*pi
+
+      # find points in each box
+      i <- 1
+      while (i <= (nr-1)) {	# loop over each ring
+        k <- 1
+        while (k <= (na-1)) { # loop over each wedge
+          ind <- which(r > rd[i] & r < rd[i+1] & th > angles[k] & th < angles[k+1])
+          pk[(i-1)*8+k] <- (length(ind)/n - ck[(i-1)*8+k])^2 / ck[(i-1)*8+k]
+          k <- k + 1
+        }
+        i <- i + 1
+      }
+
+      # find the number in the outer line of boxes
+      k <- 1
+      while (k <= (na-1)) {
+        ind <- which(r > rd[nr] & th > angles[k] & th < angles[k+1])
+        pk[40+k] <- (length(ind)/n-(1/48))^2/(1/48)
+        k <- k + 1
+      }
+
+      ppi <- ppi + sum(pk)
+
+      j <- j + 1
+    }
+
+    index <- ppi / 9
+    index
+  }
+}
+
+
+
 #' Kolmogorov index.
 #'
 #' Calculates the Kolmogorov index.
