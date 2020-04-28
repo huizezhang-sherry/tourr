@@ -1,0 +1,88 @@
+---
+title: "compare with `pursuit` package"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+load(here::here("vignettes", "data" ,"data.rda"))
+load(here::here("vignettes", "data" ,"compare.rda")) # name it as combined
+```
+
+## Optimisation procedure 
+
+`Pursuit` package only offers the option of `search_better`. Also it doesn't include the interpolation from current to target by fraction, thus making it faster to compute.
+
+1D projection 
+When computing 1d projection with our simulated `data`, functions in both packages reaches the same level of precision. `search_better` in `tourr` reaches the desirable index_val with fewer iteration due to the fact that it allows the next-round search to start from the basis on the interpolation path with higher index_val than the target basis.
+
+2D projection
+Initially, the `alpha` parameter (control the neighbourhood of the nearby basis) is declined after each search, which causes `alpha` to decrease too fast. `pp-optimizer` only allow `alpha` to decrease once there is on improvement in the index value after 30 times. I thus take the idea in our `search_better`. After this modification, `search_better` in the `tourr` package reaches a slightly low index value (0.957 vs. 0.963) in 2d projection while this is fixed with the polishing function.
+
+
+```{r}
+text <- combined %>% filter(id == 5)
+
+combined %>%
+  ggplot(aes(x = id, y = value, col = interaction(type, package), label = paste0(type,"_", package))) +
+  geom_line() +
+  facet_wrap(vars(type), scales = "free") +
+  scale_x_continuous(breaks = scales::pretty_breaks(3)) +
+  scale_y_continuous(breaks = scales::pretty_breaks(10))
+
+
+```
+
+## Other indices 
+
+### spiral data
+
+
+The `mbgraphic` package is no longer on CRAN.
+
+Re-write the `chi` index in `Pursuit` package has the problem that it needs both data & proj - more than just the product, `mat`. 
+
+`search_better` is able to find this spiral when it is hiden inside four nuisance dimensions. However, for some reason, `Pursuit` package doesn't optimise that well.
+
+
+```{r eval = FALSE}
+set.seed(123456)
+spiral_data <- spiralData(6, 1000) %>% as_tibble()
+
+# spiral_data %>%
+#   ggplot(aes(x = V1, y = V2)) +
+#   geom_point() +
+#   theme(aspect.ratio = 1)
+
+devtools::load_all()
+set.seed(12345)
+temp_spiral <- animate_xy(data = spiral_data, tour_path = guided_tour(chi(), d = 2,
+                                                                      search_f =  search_better, max.tries = 1000),
+                          rescale = FALSE, verbose = TRUE)
+
+temp_spiral %>% filter(info == "interpolation") %>% tail(1) %>% pull(basis)
+temp_spiral %>% filter(info == "interpolation") %>% tail(1) %>% pull(index_val)
+
+###########################
+devtools::load_all()
+pp_spiral <- PP_Optimizer(data = spiral_data, findex = "chi",
+                             optmethod = "GTSA", dimproj = 2, sphere = FALSE,
+                             cooling = 0.99, eps = 1e-3, maxiter = 1000, half = 30)
+
+pp_spiral$index
+
+
+pp_mult <- as_tibble(pp_temp_mult$index) %>% rename(value = Indices) %>% mutate(type = "mult", package = "pursuit")
+
+
+
+
+```
+
+```{r}
+
+```
+
