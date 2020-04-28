@@ -27,6 +27,7 @@ search_better <- function(current, alpha = 0.5, index, max.tries = Inf,
 
   cat("Old", cur_index, "\n")
   try <- 1
+  h <- 0
 
   while (try < max.tries) {
     new_basis <- basis_nearby(current, alpha)
@@ -48,14 +49,20 @@ search_better <- function(current, alpha = 0.5, index, max.tries = Inf,
                       info = ifelse(row == max(row), "new_basis", !!info)) %>%
           dplyr::select(-row)
 
-        return(list(record = record, target = new_basis))
+        return(list(record = record, target = new_basis, h = h))
       }else{
-        return(list(target = new_basis))
+
+        return(list(target = new_basis, h = h))
       }
 
+    } else {
+      h <- h + 1
     }
+
     try <- try + 1
   }
+
+
 
   cat("No better bases found after ", max.tries, " tries.  Giving up.\n",
       sep="")

@@ -61,9 +61,9 @@ search_geodesic <- function(current, alpha = 1, index, max.tries = 5, n = 5,
         cat(" - NEW BASIS\n")
 
         if (verbose) {
-          return(list(record = record, target = new_basis[[1]]))
+          return(list(record = record, target = new_basis[[1]], h = 0))
         }else{
-          return(list(target = new_basis[[1]]))
+          return(list(target = new_basis[[1]], h = 0))
         }
       }
       cat("\n")

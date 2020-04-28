@@ -86,8 +86,15 @@ guided_tour <- function(index_f, d = 2, alpha = 0.5, cooling = 0.99, max.tries =
     tries <<- tries
 
    # current, alpha = 1, index, max.tries = 5, n = 5, delta = 0.01, cur_index = NA, ...
-    basis <- search_f(current, alpha, index, max.tries, cur_index=cur_index, ...)
-    alpha <<- alpha * cooling
+    basis <- search_f(current, alpha, index, max.tries, cur_index = cur_index, ...)
+
+    if (!is.null(basis$h)){
+      if (basis$h > 30){
+        alpha <<- alpha * cooling
+      }
+    }
+
+    cat("alpha: ", alpha, "\n")
 
     list(target = basis$target, arg = names(formals(search_f)))
   }
