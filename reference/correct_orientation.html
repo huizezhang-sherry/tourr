@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>A little tour path. — little_tour • tourr</title>
+<title>check if the current and target bases are of the same orientation — correct_orientation • tourr</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,9 +46,8 @@
 
 
 
-<meta property="og:title" content="A little tour path. — little_tour" />
-<meta property="og:description" content="The little tour is a planned tour that travels between all axis parallel
-projections. (John McDonald named this type of tour.)" />
+<meta property="og:title" content="check if the current and target bases are of the same orientation — correct_orientation" />
+<meta property="og:description" content="check if the current and target bases are of the same orientation" />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -135,39 +134,19 @@ projections. (John McDonald named this type of tour.)" />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>A little tour path.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/ggobi/tourr/blob/master/R/tour-little.r'><code>R/tour-little.r</code></a></small>
-    <div class="hidden name"><code>little_tour.Rd</code></div>
+    <h1>check if the current and target bases are of the same orientation</h1>
+    <small class="dont-index">Source: <a href='https://github.com/ggobi/tourr/blob/master/R/search-better.r'><code>R/search-better.r</code></a></small>
+    <div class="hidden name"><code>correct_orientation.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>The little tour is a planned tour that travels between all axis parallel
-projections. (John McDonald named this type of tour.)</p>
+    <p>check if the current and target bases are of the same orientation</p>
     </div>
 
-    <pre class="usage"><span class='fu'>little_tour</span><span class='op'>(</span>d <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>correct_orientation</span><span class='op'>(</span><span class='va'>current</span>, <span class='va'>target</span><span class='op'>)</span></pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>d</th>
-      <td><p>target dimensionality</p></td>
-    </tr>
-    </table>
 
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Usually, you will not call this function directly, but will pass it to
-a method that works with tour paths like <code><a href='animate.html'>animate</a></code>,
-<code><a href='save_history.html'>save_history</a></code> or <code><a href='render.html'>render</a></code>.</p>
-
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='display_xy.html'>animate_xy</a></span><span class='op'>(</span><span class='va'>flea</span><span class='op'>[</span>, <span class='fl'>1</span><span class='op'>:</span><span class='fl'>6</span><span class='op'>]</span>, <span class='fu'>little_tour</span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Converting input data to the required matrix format.</span></div><div class='output co'>#&gt; <span class='message'>Using half_range 0.98</span></div><div class='img'><img src='little_tour-1.png' alt='' width='700' height='433' /></div><div class='input'><span class='fu'><a href='display_pcp.html'>animate_pcp</a></span><span class='op'>(</span><span class='va'>flea</span><span class='op'>[</span>, <span class='fl'>1</span><span class='op'>:</span><span class='fl'>6</span><span class='op'>]</span>, <span class='fu'>little_tour</span><span class='op'>(</span><span class='fl'>3</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Converting input data to the required matrix format.</span></div><div class='img'><img src='little_tour-2.png' alt='' width='700' height='433' /></div><div class='input'><span class='fu'><a href='display_scatmat.html'>animate_scatmat</a></span><span class='op'>(</span><span class='va'>flea</span><span class='op'>[</span>, <span class='fl'>1</span><span class='op'>:</span><span class='fl'>6</span><span class='op'>]</span>, <span class='fu'>little_tour</span><span class='op'>(</span><span class='fl'>3</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Converting input data to the required matrix format.</span></div><div class='img'><img src='little_tour-3.png' alt='' width='700' height='433' /></div><div class='img'><img src='little_tour-4.png' alt='' width='700' height='433' /></div><div class='input'><span class='fu'><a href='display_pcp.html'>animate_pcp</a></span><span class='op'>(</span><span class='va'>flea</span><span class='op'>[</span>, <span class='fl'>1</span><span class='op'>:</span><span class='fl'>6</span><span class='op'>]</span>, <span class='fu'>little_tour</span><span class='op'>(</span><span class='fl'>4</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Converting input data to the required matrix format.</span></div><div class='img'><img src='little_tour-5.png' alt='' width='700' height='433' /></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
