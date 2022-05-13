@@ -145,7 +145,9 @@ search_better_random <- function(current, alpha = 0.5, index, tries,
   while (try < max.tries) {
     new_basis <- basis_nearby(current, alpha, method)
     new_index <- index(new_basis)
-    temperature <- t0 / log(try + 1)
+    #temperature <- t0 / log(try + 1)
+    temperature <- t0 / try
+    #temperature <- t0 * exp(-try^(1/6))
 
     rcd_env <- parent.frame(n = 4)
     rcd_env[["record"]] <- dplyr::add_row(

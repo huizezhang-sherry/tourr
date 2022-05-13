@@ -48,7 +48,7 @@
 #' )
 display_xy <- function(center = TRUE, axes = "center", half_range = NULL,
                        col = "black", pch = 20, cex = 1,
-                       edges = NULL, edges.col = "black", ...) {
+                       edges = NULL, edges.col = "black", label = NULL,  ...) {
   labels <- NULL
 
   if (!areColors(col)) col <- mapColors(col)
@@ -79,6 +79,7 @@ display_xy <- function(center = TRUE, axes = "center", half_range = NULL,
     if (center) x <- center(x)
     x <- x / half_range
     points(x, col = col, pch = pch, cex = cex)
+    draw_label(x, col = col, labels = unique(label))
 
     if (!is.null(edges)) {
       segments(x[edges[, 1], 1], x[edges[, 1], 2],
@@ -126,4 +127,17 @@ draw_tour_axes <- function(proj, labels, limits, position) {
   theta <- seq(0, 2 * pi, length = 50)
   lines(adj(cos(theta)), adj(sin(theta)), col = "grey50")
   text(adj(proj[, 1]), adj(proj[, 2]), label = labels, col = "grey50")
+}
+
+draw_label <- function(x, col, labels){
+  limits <- 1
+  axis_scale <- 2 * limits / 3
+  axis_pos <- 0
+  adj <- function(x) axis_pos + x * axis_scale
+
+  dt <- data.frame(col = col, col_lead = dplyr::lead(col, default = "aaa"))
+  dt$id <- 1:nrow(dt)
+  ids <- subset(dt, col != col_lead)$id
+
+  text(adj(-1), adj(x[ids,2]), label = labels, cex = 0.8)
 }
